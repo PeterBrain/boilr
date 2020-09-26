@@ -9,13 +9,14 @@ Goal: Use the overproduction of the PV system and increase the self consumption 
 - Raspberry Pi 1B
 - relay for the pi
 - contactor to switch the three phases AC
+- circuit breaker
 - distribution box
 - ethernet cable
 - network switch
 
-TODO:
+## TODO
+
 - date & time exception handling
 - http request exception handling
 - running median
 - tests
--
