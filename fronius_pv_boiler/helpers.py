@@ -1,14 +1,12 @@
 from datetime import datetime
 
 def date_checker(active_date_range):
-    current_date = datetime.now() #datetime(datetime.now().year, datetime.now().month, datetime.now().day)
-    current_month = current_date.strftime("%d-%m") # returns string
+    current_date = datetime.now()
+    current_month = current_date.strftime("%d-%m")
     current_month_and_day = datetime.strptime(current_month, "%d-%m")
     active_date_start, active_date_end = [datetime.strptime(_, "%d-%m") for _ in active_date_range]
-    #active_start = datetime.datetime.strptime("02-05", "%d-%m")
-    #active_end = datetime.datetime.strptime("31-10", "%d-%m")
 
-    if active_date_start <= current_month_and_day <= active_date_end: #active_start.month <= current_date.month <= active_end.month
+    if active_date_start <= current_month_and_day <= active_date_end:
         return(True, "")
     else:
         return(False, "Date is not in active range")

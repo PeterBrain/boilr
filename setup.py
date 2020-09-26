@@ -10,7 +10,7 @@ with open('LICENSE') as f:
 setup(
     name='fronius_pv_boiler',
     version=fronius_pv_boiler.__version__,
-    description='Water boiler automation with a fronius pv inverter on a raspberry pi.',
+    description='Water boiler automation with a Fronius pv inverter on a raspberry pi.',
     license=license,
     long_description=readme,
     author='Peter Loecker',
