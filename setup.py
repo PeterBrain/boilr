@@ -15,7 +15,7 @@ setup(
     long_description=readme,
     author='Peter Loecker',
     author_email='peter.loecker@live.at',
-    url="https://github.com/PeterBrain/fronius-pv-boiler",
+    url="https://github.com/PeterBrain/boilr",
     packages=find_packages(exclude=('tests', 'docs')),
     #install_requires=[]
 )

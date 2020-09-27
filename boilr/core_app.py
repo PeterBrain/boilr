@@ -59,7 +59,7 @@ def run():
 def shutdown(signum, frame): # signum and frame are mandatory
     logger.info("Stopping boilr daemon... bye bye")
     #daemon.close()
-    #daemon.terminate(signum, frame)
+    daemon.terminate(signum, frame)
     sys.exit(0)
 
 
@@ -74,10 +74,8 @@ daemon = daemon.DaemonContext(
         pidfile=daemon.pidfile.PIDLockFile(config.pid_lockfile),#lockfile.FileLock(config.pid_lockfile),
         detach_process=None,
         signal_map={
-            #'SIGTSTP': None,
             #'SIGTTIN': None,
             #'SIGTTOU': None,
-            #'SIGTERM': 'terminate',
             signal.SIGTERM: shutdown,
             signal.SIGTSTP: shutdown
         },
@@ -98,7 +96,7 @@ if os.path.exists(config.pid_lockfile):
     sys.exit(1)
 else:
     #os.makedirs(os.path.dirname(config.working_directory), exist_ok=True) # maybe needs elevated privileges
-    with daemon: # daemon.open()
+    with daemon:
         while True:
             run()
             time.sleep(config.interval)

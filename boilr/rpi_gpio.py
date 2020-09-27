@@ -41,7 +41,7 @@ except RuntimeError:
         return False
 
 except:
-    logger.error("Somehing went wrong")
+    logger.error("Something went wrong")
 
     def gpio_relais(pin):
         return False

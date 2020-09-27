@@ -3,6 +3,8 @@ import boilr.config as config
 import logging
 from logging.handlers import RotatingFileHandler
 
+logger = logging.getLogger(__name__)
+
 #file_formatter = logging.Formatter('[%(asctime)s] %(levelname)s - %(name)s - %(message)s - [in %(pathname)s:%(lineno)d]',"%Y-%m-%dT%H:%M:%S")
 #file_handler = RotatingFileHandler(config.logfile, maxBytes=1048576, backupCount=5) # doesn't work with daemon
 file_handler = logging.FileHandler(config.logfile)
@@ -14,7 +16,6 @@ console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.ERROR)
 console_handler.setFormatter(console_formatter)
 
-#logger = logging.getLogger(__name__)
 #logger.addHandler(file_handler)
 #logger.addHandler(console_handler)
 #logger.setLevel(logging.INFO)
@@ -30,3 +31,5 @@ logging.basicConfig(
         format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
         datefmt='%Y-%m-%dT%H:%M:%S'
     )
+
+logger.debug("Logging config applied")
