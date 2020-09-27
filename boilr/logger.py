@@ -1,4 +1,4 @@
-import fronius_pv_boiler.config as config
+import boilr.config as config
 
 import logging
 from logging.handlers import RotatingFileHandler

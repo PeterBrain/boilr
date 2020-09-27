@@ -10,6 +10,7 @@ url = "http://10.0.10.90"
 api = "/solar_api/v1"
 powerflow = "/GetPowerFlowRealtimeData.fcgi"
 
-logfile = "/var/log/fronius_pv_boiler/boilr.log"
-pid_lockfile = "/var/run/fronius_pv_boiler.pid"
-working_directory = "/var/lib/fronius_pv_boiler"
+working_directory = "/var/log/boilr" #"/var/lib/boilr/"
+logfile = working_directory + "/boilr.log"#"/var/log/boilr/boilr.log"
+pid_lockfile = working_directory + "/boilr.pid" #"/var/run/boilr.pid"
+chroot_dir = None #working_directory

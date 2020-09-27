@@ -1,4 +1,4 @@
-# FRONIUS PV Boiler
+# Boilr
 
 Water boiler automation with a Fronius pv inverter on a raspberry pi.
 
@@ -16,7 +16,14 @@ Goal: Use the overproduction of the PV system and increase the self consumption 
 
 ## TODO
 
-- date & time exception handling
-- http request exception handling
-- running median
-- tests
+- date & time exception handling (wrong date or time format)
+- http request exception handling (no network connection, no response)
+- store response (file or list)
+  - running median (prevents system nervousness - contactor toggles often)
+- tests (obvious)
+- daemon
+  - working directory (auto install - elevated privileges)
+  - run chrooted
+  - add more signals
+- logrotate
+- watchdog (config reload)

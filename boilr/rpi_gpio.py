@@ -1,4 +1,4 @@
-import fronius_pv_boiler.logger as logg
+import boilr.logger as logg
 import logging
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ try:
         return True
 
 except RuntimeError:
-    logger.error("Error importing RPi.GPIO! This is probably because you are not executing this script on a Raspberry Pi or you need elevated privileges. You can achieve this by using 'sudo' to run your script")
+    logger.error("Error importing RPi.GPIO! This is probably because you are not executing this script on a Raspberry Pi or you need elevated privileges.")
 
     def gpio_relais(pin):
         return False
