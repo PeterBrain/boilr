@@ -1,18 +1,12 @@
 import boilr.logger as logg
 import boilr.config as config
+import boilr.daemon as daemon
 import boilr.helpers as helpers
 import boilr.rpi_gpio as rpi_gpio
 
-import sys
-import os
-import time
-import json
+import sys, os
 import logging
-import signal
 import requests
-import daemon # https://github.com/python/peps/blob/master/pep-3143.txt
-from daemon import pidfile
-#import fasteners
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +35,7 @@ def run():
     #except requests.exceptions.RequestException as e:
     except:
         #raise SystemExit(e)
-        shutdown(9, sys.exc_info())
+        daemon.daemon_stop()
 
     powerflow_site = response_powerflow.json()['Body']['Data']['Site']
     powerflow_pgrid = powerflow_site['P_Grid'] or 0 # + from grid, - to grid, null no meter enabled
@@ -58,7 +52,7 @@ def run():
     logger.debug("SOC: " + str(powerflow_soc) + " %")
 
     if not rpi_gpio.gpio_relais(config.rpi_pin_relais):
-        #shutdown(9,"Error with GPIO")
+        #daemon.daemon_stop()
         pass
 
     logger.debug("checking confitions")
@@ -73,55 +67,7 @@ def run():
         gpio_output = rpi_gpio.output_relais(config.rpi_pin_relais, 0)
 
     if not gpio_output:
-        #shutdown(9,"Error with GPIO")
+        #daemon.daemon_stop()
         pass
 
     return True
-
-
-def shutdown(signum, frame): # signum and frame are mandatory
-    logger.debug("signal " + str(signum) + " received. Shutting down.")
-    logger.info("Stopping boilr daemon... bye bye")
-    #daemon.close()
-    daemon.terminate(signum, frame)
-    sys.exit(0)
-
-
-daemon = daemon.DaemonContext(
-        files_preserve=[
-            logg.file_handler.stream,
-            logg.console_handler.stream
-        ],
-        chroot_directory=config.chroot_dir,
-        working_directory=config.working_directory,
-        umask=0o002,
-        pidfile=daemon.pidfile.PIDLockFile(config.pid_lockfile),#lockfile.FileLock(config.pid_lockfile),
-        detach_process=None,
-        signal_map={
-            #'SIGTTIN': None,
-            #'SIGTTOU': None,
-            signal.SIGTERM: shutdown,
-            signal.SIGTSTP: shutdown
-        },
-        uid=None, #1001
-        gid=None, #777
-        initgroups=False,
-        prevent_core=True,
-        stdin=sys.stdin,
-        stdout=sys.stdout,
-        stderr=sys.stderr
-    )
-
-logger.info("Starting boilr daemon")
-
-# start daemon
-if os.path.exists(config.pid_lockfile):
-    logger.debug("Another instance of this daemon already running (according to {0})".format(config.pid_lockfile))
-    logger.error("Daemon already running")
-    sys.exit(1)
-else:
-    #os.makedirs(os.path.dirname(config.working_directory), exist_ok=True) # maybe needs elevated privileges
-    with daemon:
-        while True:
-            run()
-            time.sleep(config.interval)

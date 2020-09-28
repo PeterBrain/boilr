@@ -6,8 +6,8 @@ from logging.handlers import RotatingFileHandler
 logger = logging.getLogger(__name__)
 
 #file_formatter = logging.Formatter('[%(asctime)s] %(levelname)s - %(name)s - %(message)s - [in %(pathname)s:%(lineno)d]',"%Y-%m-%dT%H:%M:%S")
-#file_handler = RotatingFileHandler(config.logfile, maxBytes=1048576, backupCount=5) # doesn't work with daemon
-file_handler = logging.FileHandler(config.logfile)
+#file_handler = RotatingFileHandler(config.logpath, maxBytes=1048576, backupCount=5) # doesn't work with daemon
+file_handler = logging.FileHandler(config.logpath)
 file_handler.setLevel(logging.INFO)
 #file_handler.setFormatter(file_formatter)
 

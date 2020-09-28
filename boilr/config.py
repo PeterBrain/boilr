@@ -1,3 +1,7 @@
+import os, sys
+
+prog_name = "boilr" # program name
+
 interval = 10 # check fronius api every x seconds
 rpi_pin_relais = 17 # board number 11 (first non-special gpio)
 charge_threshold = 20 # min battery state of charge in %
@@ -12,7 +16,7 @@ ip = "10.0.10.90" # ip address of the inverter
 api = "/solar_api/v1" # api version (inverter specific; check with this URI: http://<ip-address>/solar_api/GetAPIVersion.cgi)
 powerflow = "/GetPowerFlowRealtimeData.fcgi" # resource
 
-working_directory = "/var/log/boilr" #"/var/lib/boilr/"
-logfile = working_directory + "/boilr.log"#"/var/log/boilr/boilr.log"
-pid_lockfile = working_directory + "/boilr.pid" #"/var/run/boilr.pid"
+working_directory = "/var/log/" + prog_name #"/var/lib/boilr/"
+logpath = os.path.join(working_directory, prog_name + ".log") #"/var/log/boilr/boilr.log"
+pidpath = os.path.join(working_directory, prog_name + ".pid") #"/var/run/boilr.pid"
 chroot_dir = None #working_directory

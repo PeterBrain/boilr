@@ -7,7 +7,7 @@ try:
     import RPi.GPIO as GPIO
 
 except RuntimeError:
-    logger.error("Error importing RPi.GPIO! This is probably because you are not executing this script on a Raspberry Pi or you need elevated privileges.")
+    logger.error("While importing RPi.GPIO! This is probably because you are not executing this script on a Raspberry Pi or you need elevated privileges.")
 
     def gpio_relais(pin):
         return False
