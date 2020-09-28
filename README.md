@@ -12,7 +12,7 @@ I don't know, I don't care. Just wanted to do this in my spare time. Otherwise I
 If you are not comfortable with some electrical parts, call an electrician, because they can definitely kill you. Things like networking and connecting the raspberry to the relay shouldn't be that hard.
 
 ## Additional Downloads
-- Fronius official API documentation: [Documentation - Fronius Solar API V1](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&ved=2ahUKEwjPvuDZ7YvsAhWok4sKHZOFCAEQFjABegQIBhAB&url=https%3A%2F%2Fwww.fronius.com%2F~%2Fdownloads%2FSolar%2520Energy%2FOperating%2520Instructions%2F42%252C0410%252C2012.pdf&usg=AOvVaw01uOKq3ZB2qVDb-SDr9IoO)
+- Fronius official API documentation: [Documentation - Fronius Solar API V1](https://www.fronius.com/~/downloads/Solar%20Energy/Operating%20Instructions/42%2C0410%2C2012.pdf)
 - Postman request collection: [Postman Collection - Fronius Solar API V1](https://www.getpostman.com/collections/27c663306206d7fbf502)
 
 
