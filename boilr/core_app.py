@@ -32,11 +32,11 @@ def run():
 
     try:
         response_powerflow = requests.get(inverter_url + config.api + config.powerflow, timeout=config.request_timeout)
+    #except requests.exceptions.ConnectionError as e: # network problem
+    #    return False
     #except requests.exceptions.Timeout as e:
     #    return False
     #except requests.exceptions.TooManyRedirects as e:
-    #    return False
-    #except requests.exceptions.ConnectionError as e:
     #    return False
     #except requests.exceptions.RequestException as e:
     except:
@@ -57,18 +57,24 @@ def run():
 
     logger.debug("SOC: " + str(powerflow_soc) + " %")
 
-    rpi_gpio.gpio_relais(config.rpi_pin_relais)
+    if not rpi_gpio.gpio_relais(config.rpi_pin_relais):
+        #shutdown(9,"Error with GPIO")
+        pass
 
     logger.debug("checking confitions")
     if powerflow_soc >= config.charge_threshold and powerflow_pakku < 0 and powerflow_pgrid < 0 and powerflow_ppv > config.ppv_threshold:
         # soc over threshold & storage in charging mode & supply into grid & pv production over threshold
         logger.debug("conditions not met: contactor closed")
         logger.info("Status: active")
-        rpi_gpio.output_relais(config.rpi_pin_relais, 1)
+        gpio_output = rpi_gpio.output_relais(config.rpi_pin_relais, 1)
     else:
         logger.debug("conditions met: contactor open")
         logger.info("Status: inactive")
-        rpi_gpio.output_relais(config.rpi_pin_relais, 0)
+        gpio_output = rpi_gpio.output_relais(config.rpi_pin_relais, 0)
+
+    if not gpio_output:
+        #shutdown(9,"Error with GPIO")
+        pass
 
     return True
 
