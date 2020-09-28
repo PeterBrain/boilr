@@ -8,48 +8,65 @@ import os
 import time
 import json
 import logging
+import signal
 import requests
 import daemon # https://github.com/python/peps/blob/master/pep-3143.txt
 from daemon import pidfile
 #import fasteners
-import signal
 
 logger = logging.getLogger(__name__)
 
 def run():
     date_check = helpers.date_checker(config.active_date_range)
     if not date_check[0]:
-        logger.warning(date_check[1]) # not in date range
         rpi_gpio.cleanup()
         return False
 
     time_check = helpers.time_checker(config.active_time_range)
     if not time_check[0]:
-        logger.warning(time_check[1]) # not in time range
         rpi_gpio.cleanup()
         return False
 
     logger.debug("gathering information")
+    inverter_url = config.scheme + config.ip
 
-    response_powerflow = requests.get(config.url + config.api + config.powerflow)
+    try:
+        response_powerflow = requests.get(inverter_url + config.api + config.powerflow, timeout=config.request_timeout)
+    #except requests.exceptions.Timeout as e:
+    #    return False
+    #except requests.exceptions.TooManyRedirects as e:
+    #    return False
+    #except requests.exceptions.ConnectionError as e:
+    #    return False
+    #except requests.exceptions.RequestException as e:
+    except:
+        #raise SystemExit(e)
+        shutdown(9, sys.exc_info())
 
     powerflow_site = response_powerflow.json()['Body']['Data']['Site']
     powerflow_pgrid = powerflow_site['P_Grid'] or 0 # + from grid, - to grid, null no meter enabled
     powerflow_pakku = powerflow_site['P_Akku'] or 0 # + discharge, - charge, null not active
     powerflow_ppv = powerflow_site['P_PV'] or 0 # + production, null inverter not running
 
+    logger.debug("Powerflow grid: " + str(powerflow_pgrid) + " W")
+    logger.debug("Powerflow akku: " + str(powerflow_pakku) + " W")
+    logger.debug("Powerflow ppv: " + str(powerflow_ppv) + " W")
+
     powerflow_inverters = response_powerflow.json()['Body']['Data']['Inverters']['1']
     powerflow_soc = powerflow_inverters['SOC'] # state of charge
 
+    logger.debug("SOC: " + str(powerflow_soc) + " %")
+
     rpi_gpio.gpio_relais(config.rpi_pin_relais)
 
+    logger.debug("checking confitions")
     if powerflow_soc >= config.charge_threshold and powerflow_pakku < 0 and powerflow_pgrid < 0 and powerflow_ppv > config.ppv_threshold:
         # soc over threshold & storage in charging mode & supply into grid & pv production over threshold
-        logger.info("Contactor: closed")
+        logger.debug("conditions not met: contactor closed")
         logger.info("Status: active")
         rpi_gpio.output_relais(config.rpi_pin_relais, 1)
     else:
-        logger.info("Contactor: open")
+        logger.debug("conditions met: contactor open")
         logger.info("Status: inactive")
         rpi_gpio.output_relais(config.rpi_pin_relais, 0)
 
@@ -57,6 +74,7 @@ def run():
 
 
 def shutdown(signum, frame): # signum and frame are mandatory
+    logger.debug("signal " + str(signum) + " received. Shutting down.")
     logger.info("Stopping boilr daemon... bye bye")
     #daemon.close()
     daemon.terminate(signum, frame)
@@ -92,7 +110,8 @@ logger.info("Starting boilr daemon")
 
 # start daemon
 if os.path.exists(config.pid_lockfile):
-    logger.error("deamon already running (according to {0})".format(config.pid_lockfile))
+    logger.debug("Another instance of this daemon already running (according to {0})".format(config.pid_lockfile))
+    logger.error("Daemon already running")
     sys.exit(1)
 else:
     #os.makedirs(os.path.dirname(config.working_directory), exist_ok=True) # maybe needs elevated privileges

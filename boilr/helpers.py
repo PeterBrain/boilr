@@ -4,6 +4,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 def date_checker(active_date_range):
+    logger.debug("checking date")
+
     current_date = datetime.now()
     current_month = current_date.strftime("%d-%m")
     current_month_and_day = datetime.strptime(current_month, "%d-%m")
@@ -18,11 +20,13 @@ def date_checker(active_date_range):
         logger.debug("Date within active range")
         return(True, "")
     else:
-        logger.debug("Date is not in active range")
+        logger.info("Date is not in active range")
         return(False, "Date is not in active range")
 
 
 def time_checker(active_time_range):
+    logger.debug("checking time")
+
     current_time = datetime.now().time()
     current_time_str = current_time.strftime("%H:%M")
     current_hour_and_minute = datetime.strptime(current_time_str, "%H:%M")
@@ -37,5 +41,5 @@ def time_checker(active_time_range):
         logger.debug("Time within active range")
         return(True, "")
     else:
-        logger.debug("Time is not in active range")
+        logger.info("Time is not in active range")
         return(False, "Time is not in active range")
