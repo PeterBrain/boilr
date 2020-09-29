@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 try:
     import RPi.GPIO as GPIO
 
-except RuntimeError:
+except RuntimeError as re:
     logger.error("While importing RPi.GPIO! This is probably because you are not executing this script on a Raspberry Pi or you need elevated privileges.")
 
     def gpio_relais(pin):
@@ -18,7 +18,7 @@ except RuntimeError:
     def cleanup():
         return False
 
-except:
+except Exception as e:
     logger.error("Unexpected: Something went wrong")
 
     def gpio_relais(pin):
@@ -48,6 +48,7 @@ else:
         else:
             logger.warning("GPIO state: " + str(state) + " is not a valid state")
             return False
+
         return True
 
 

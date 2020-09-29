@@ -14,27 +14,11 @@ logger = logging.getLogger(__name__)
 
 class MainCtrl:
     thread_continue = True
-    #thread_token = "token"
-    """log = None
-
-    def getLogger(self):
-        logging.basicConfig(
-            format='%(asctime)s.%(msecs)03d %(levelname)s {%(module)s} [%(funcName)s] %(message)s',
-            datefmt='%Y-%m-%dT%H:%M:%S',
-            filename=logpath,
-            #filemode='w',
-            level=logging.INF
-            )
-
-        self.log = logging.getLogger("Main")
-        return self.log"""
 
 mainctrl = MainCtrl()
 
 def main_thread_stop(signum=None, frame=None):
     mainctrl.thread_continue = False
-    #mainctrl.thread_token = "test"
-    #logger.info("TOKEN: {0}".format(mainctrl.thread_token))
 
 
 def main_thread(args, mainctrl):
@@ -42,29 +26,25 @@ def main_thread(args, mainctrl):
 
     if hasattr(args, 'verbose'):
         verbose = args.verbose
-
-    #log = mainctrl.getLogger()
-    if verbose:
         logger.info("ARGS: {0}".format(args))
+
     try:
         while mainctrl.thread_continue:
             if verbose:
-                #logger.info("TOKEN: {0}".format(mainctrl.thread_token))
-                pass
+                logger.debug("Continuing...")
 
             core_app.run()
             time.sleep(config.interval)
-
     except KeyboardInterrupt as ke:
         if verbose:
             logger.warning("Interrupting...")
-
     except Exception as e:
         if verbose:
             logger.error("Exception: {0}".format(str(e)))
+    finally:
+        logger.info("Exiting...")
+        #sys.exit(0)
 
-    logger.info("Exiting...")
-    #sys.exit(0)
 
 def daemon_start(args=None):
     logger.info("Starting {0}...".format(config.prog_name))
@@ -88,6 +68,8 @@ def daemon_stop(args=None):
             except ProcessLookupError as ple:
                 os.remove(config.pidpath)
                 logger.error("ProcessLookupError: {0}".format(ple))
+            except Exception as e:
+                logger.error("Exception: {0}".format(e))
     else:
         logger.error("Process isn't running (according to the absence of {0}).".format(config.pidpath))
 
@@ -124,11 +106,9 @@ daemon = daemon.DaemonContext(
         chroot_directory=config.chroot_dir,
         working_directory=config.working_directory,
         umask=0o002,
-        pidfile=daemon.pidfile.PIDLockFile(config.pidpath), #lockfile.FileLock(config.pidpath),
+        pidfile=daemon.pidfile.PIDLockFile(config.pidpath),
         detach_process=None,
         signal_map={
-            #'SIGTTIN': None,
-            #'SIGTTOU': None,
             signal.SIGTERM: main_thread_stop,
             signal.SIGTSTP: main_thread_stop,
             signal.SIGINT: main_thread_stop,

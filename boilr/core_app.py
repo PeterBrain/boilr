@@ -21,21 +21,23 @@ def run():
         rpi_gpio.cleanup()
         return False
 
-    logger.debug("gathering information")
+    logger.debug("Gathering information")
     inverter_url = config.scheme + config.ip
 
     try:
         response_powerflow = requests.get(inverter_url + config.api + config.powerflow, timeout=config.request_timeout)
-    #except requests.exceptions.ConnectionError as e: # network problem
-    #    return False
-    #except requests.exceptions.Timeout as e:
-    #    return False
-    #except requests.exceptions.TooManyRedirects as e:
-    #    return False
-    #except requests.exceptions.RequestException as e:
-    except:
-        #raise SystemExit(e)
+    except requests.exceptions.ConnectionError as e: # network problem
+        logger.warning("Connection error")
+    except requests.exceptions.Timeout as e:
+        logger.warning("Request timeout")
+    except requests.exceptions.TooManyRedirects as e:
+        logger.warning("Too many redirects")
+    except requests.exceptions.RequestException as e:
+        logger.warning("There was an error with the request")
+    except Exception as e:
+        logger.error("Unrecoverable error in request")
         daemon.daemon_stop()
+        #raise SystemExit(e)
 
     powerflow_site = response_powerflow.json()['Body']['Data']['Site']
     powerflow_pgrid = powerflow_site['P_Grid'] or 0 # + from grid, - to grid, null no meter enabled
@@ -52,22 +54,22 @@ def run():
     logger.debug("SOC: " + str(powerflow_soc) + " %")
 
     if not rpi_gpio.gpio_relais(config.rpi_pin_relais):
+        logger.warning("Error while setting gpio mode")
         #daemon.daemon_stop()
-        pass
 
-    logger.debug("checking confitions")
+    logger.debug("Checking confitions")
     if powerflow_soc >= config.charge_threshold and powerflow_pakku < 0 and powerflow_pgrid < 0 and powerflow_ppv > config.ppv_threshold:
         # soc over threshold & storage in charging mode & supply into grid & pv production over threshold
-        logger.debug("conditions not met: contactor closed")
+        logger.debug("Conditions not met: contactor closed")
         logger.info("Status: active")
         gpio_output = rpi_gpio.output_relais(config.rpi_pin_relais, 1)
     else:
-        logger.debug("conditions met: contactor open")
+        logger.debug("Conditions met: contactor open")
         logger.info("Status: inactive")
         gpio_output = rpi_gpio.output_relais(config.rpi_pin_relais, 0)
 
     if not gpio_output:
+        logger.warning("Error while setting gpio pin")
         #daemon.daemon_stop()
-        pass
 
     return True
