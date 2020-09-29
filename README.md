@@ -15,20 +15,51 @@ If you are not comfortable with some electrical parts, call an electrician, beca
 - Fronius official API documentation: [Documentation - Fronius Solar API V1](https://www.fronius.com/~/downloads/Solar%20Energy/Operating%20Instructions/42%2C0410%2C2012.pdf)
 - Postman request collection: [Postman Collection - Fronius Solar API V1](https://www.getpostman.com/collections/27c663306206d7fbf502)
 
+## Usage
 
-## Hardware
+```bash
+python3 -m boilr [-h] {start,stop,status,restart,debug} ...
+
+positional arguments:
+  {start,stop,status,restart,debug}
+    start               Starts boilr daemon
+    stop                Stops boilr daemon
+    status              Show the status of boilr daemon
+    restart             Restarts boilr daemon
+    debug               Starts boilr daemon in debug mode
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v, --verbose         verbose mode
+```
+
+<!-- for later
+```bash
+python3 setup.py
+```
+-->
+
+## Requirements
+
+### Software
+
+- Raspberry Pi with operating system (i use the 1B with a headless raspbian)
+- Python 3 (tested with 3.7)
+- some python packages
+
+### Hardware
 
 Here is a list of all parts I used:
 
-- contactor to switch the three phases AC (~30€)
+- contactor to switch the three phases AC (~20€)
 - 5x2.5mm2 copper stranded cable
-- ferrules for the copper wires
-- circuit breaker (had one laying around, but around 30€)
-- distribution box (~20-30€)
+  - ferrules (only if you have stranded wires)
+- circuit breaker (had one laying around, but around 20€)
+- distribution box (~20€)
 - Raspberry Pi 1B (used for about 5€) + an sd card for the os (laying around)
-- relay for the pi (don't know yet)
+- relay for the pi (5pcs for 8€, but we need only one)
 - ethernet cable (had an old one at home (Cat5 - not even Cat5e))
-- network switch (used, gigabit (overkill) around 5-10€)
+- network switch (used, gigabit (overkill) around 5-10€, or an old router with a builtin switch for free)
 
 I could have used an wifi dongle instead of an ethernet cable, but the signal strengh in my cellar (where the water boiler is) is somewhat inexistent. Plus, the pv inverter (already connected via lan) is also there.
 
@@ -46,20 +77,25 @@ At least I get to say: "Hey mum, look what I did"
 
 ## TL; DR
 
-Heating water with not used power from the pv. That's it, everything else is just blabla.
+Heating water with not used power from the pv. That's it, cost analysis is just blabla.
 
 ## TODO
 
-- http request exception handling (no network connection, no response)
+### Required
+
+- installer
+- tests (obvious)
 - store response (file or list)
   - running median (prevents system nervousness - contactor toggles often)
-- tests (obvious)
-- daemon
-  - working directory (auto install - elevated privileges)
-  - run chrooted
-  - add more signals
-- logrotate
-- watchdog (config reload)
 - RPi.GPIO cleanup
 - check relay & contactor status
 - move config.py to docs/conf.py
+
+### Optional
+
+- daemon
+  - working directory (auto install - elevated privileges)
+  - run chrooted
+  - reload config
+- logrotate
+- watchdog (config reload)

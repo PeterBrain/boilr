@@ -7,7 +7,7 @@ import time
 import logging
 import argparse
 import signal
-import daemon # https://github.com/python/peps/blob/master/pep-3143.txt
+import daemon
 from daemon import pidfile
 
 logger = logging.getLogger(__name__)

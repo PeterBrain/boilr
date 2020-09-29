@@ -44,14 +44,14 @@ def run():
     powerflow_pakku = powerflow_site['P_Akku'] or 0 # + discharge, - charge, null not active
     powerflow_ppv = powerflow_site['P_PV'] or 0 # + production, null inverter not running
 
-    logger.debug("Powerflow grid: " + str(powerflow_pgrid) + " W")
-    logger.debug("Powerflow akku: " + str(powerflow_pakku) + " W")
-    logger.debug("Powerflow ppv: " + str(powerflow_ppv) + " W")
+    logger.debug("Powerflow grid: {0} W".format(str(powerflow_pgrid)))
+    logger.debug("Powerflow akku: {0} W".format(str(powerflow_pakku)))
+    logger.debug("Powerflow ppv: {0} W".format(str(powerflow_ppv)))
 
     powerflow_inverters = response_powerflow.json()['Body']['Data']['Inverters']['1']
     powerflow_soc = powerflow_inverters['SOC'] # state of charge
 
-    logger.debug("SOC: " + str(powerflow_soc) + " %")
+    logger.debug("SOC: {0} %".format(str(powerflow_soc)))
 
     if not rpi_gpio.gpio_relais(config.rpi_pin_relais):
         logger.warning("Error while setting gpio mode")
