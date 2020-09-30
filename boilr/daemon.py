@@ -1,6 +1,7 @@
 import boilr.logger as logg
 import boilr.config as config
 import boilr.core_app as core_app
+import boilr.rpi_gpio as rpi_gpio
 
 import sys, os
 import time
@@ -42,6 +43,7 @@ def main_thread(args, mainctrl):
         if verbose:
             logger.error("Exception: {0}".format(str(e)))
     finally:
+        rpi_gpio.cleanup()
         logger.info("Exiting...")
         #sys.exit(0)
 
@@ -61,6 +63,7 @@ def daemon_start(args=None):
 
 def daemon_stop(args=None):
     logger.info("Stopping {0} with args {1}".format(config.prog_name, args))
+
     if os.path.exists(config.pidpath):
         with open(config.pidpath) as pid:
             try:
@@ -88,6 +91,7 @@ def daemon_debug(args):
 
 def daemon_status(args):
     logger.debug("{0} Status {1}".format(config.prog_name, args))
+
     if os.path.exists(config.pidpath):
         msg = "{0} is running".format(config.prog_name)
         print(msg)

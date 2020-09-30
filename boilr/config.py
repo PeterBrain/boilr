@@ -3,7 +3,8 @@ import os, sys
 prog_name = "boilr" # program name
 
 interval = 10 # check fronius api every x seconds
-rpi_pin_relais = 17 # board number 11 (first non-special gpio)
+rpi_channel_relais_out = 17 # board number 11
+rpi_channel_relais_in = 27 # board number 13
 charge_threshold = 20 # min battery state of charge in %
 ppv_threshold = 100 # min pv production in W
 

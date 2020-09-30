@@ -5,19 +5,18 @@ import boilr.helpers as helpers
 import boilr.rpi_gpio as rpi_gpio
 
 import sys, os
+import time
 import logging
 import requests
 
 logger = logging.getLogger(__name__)
 
 def run():
-    date_check = helpers.date_checker(config.active_date_range)
-    if not date_check[0]:
+    if not helpers.date_checker(config.active_date_range)[0]:
         rpi_gpio.cleanup()
         return False
 
-    time_check = helpers.time_checker(config.active_time_range)
-    if not time_check[0]:
+    if not helpers.time_checker(config.active_time_range)[0]:
         rpi_gpio.cleanup()
         return False
 
@@ -44,16 +43,16 @@ def run():
     powerflow_pakku = powerflow_site['P_Akku'] or 0 # + discharge, - charge, null not active
     powerflow_ppv = powerflow_site['P_PV'] or 0 # + production, null inverter not running
 
-    logger.debug("Powerflow grid: {0} W".format(str(powerflow_pgrid)))
-    logger.debug("Powerflow akku: {0} W".format(str(powerflow_pakku)))
-    logger.debug("Powerflow ppv: {0} W".format(str(powerflow_ppv)))
+    logger.debug("Powerflow grid: {0} W".format(powerflow_pgrid))
+    logger.debug("Powerflow akku: {0} W".format(powerflow_pakku))
+    logger.debug("Powerflow ppv: {0} W".format(powerflow_ppv))
 
     powerflow_inverters = response_powerflow.json()['Body']['Data']['Inverters']['1']
     powerflow_soc = powerflow_inverters['SOC'] # state of charge
 
-    logger.debug("SOC: {0} %".format(str(powerflow_soc)))
+    logger.debug("SOC: {0} %".format(powerflow_soc))
 
-    if not rpi_gpio.gpio_relais(config.rpi_pin_relais):
+    if not rpi_gpio.gpio_mode(config.rpi_channel_relais_out, "out") or not rpi_gpio.gpio_mode(config.rpi_channel_relais_in, "in"):
         logger.warning("Error while setting gpio mode")
         #daemon.daemon_stop()
 
@@ -62,14 +61,19 @@ def run():
         # soc over threshold & storage in charging mode & supply into grid & pv production over threshold
         logger.debug("Conditions not met: contactor closed")
         logger.info("Status: active")
-        gpio_output = rpi_gpio.output_relais(config.rpi_pin_relais, 1)
+        gpio_output = rpi_gpio.output_relais(config.rpi_channel_relais_out, 1)
     else:
         logger.debug("Conditions met: contactor open")
         logger.info("Status: inactive")
-        gpio_output = rpi_gpio.output_relais(config.rpi_pin_relais, 0)
+        gpio_output = rpi_gpio.output_relais(config.rpi_channel_relais_out, 0)
+
+    time.sleep(1)
 
     if not gpio_output:
-        logger.warning("Error while setting gpio pin")
+        logger.warning("Error while setting gpio channel")
+        #daemon.daemon_stop()
+    elif not rpi_gpio.input_relais(config.rpi_channel_relais_in):
+        logger.warning("Error while reading gpio channel")
         #daemon.daemon_stop()
 
     return True

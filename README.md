@@ -1,10 +1,8 @@
 # Boilr
 
-## Preamble
-
 Water boiler automation with a Fronius pv inverter on a Raspberry Pi.
 
-Goal: Use the overproduction of the PV system and increase the self consumption during daytime by heating water. By doing that, you decrease the amount of energy supplied to the grid, but also reduce consumption of pellets, oil or other fuel for heating.
+The goal was to use the overproduction of the PV system and increase the self consumption during daytime by heating water. By doing that, you decrease the amount of energy supplied to the grid, but also reduce consumption of pellets, oil or other fuel for heating.
 
 That's the theory. But what about special cases like an already running heater? Or taking away power generated from the pv and you have to use power from the grid to use the stove?
 I don't know, I don't care. Just wanted to do this in my spare time. Otherwise I would have wasted the time invested in this project by watching Netflix or Youtube.
@@ -17,8 +15,22 @@ If you are not comfortable with some electrical parts, call an electrician, beca
 
 ## Usage
 
+Starting:
+
 ```bash
-python3 -m boilr [-h] {start,stop,status,restart,debug} ...
+python3 -m boilr start
+```
+
+Stopping:
+
+```bash
+python3 -m boilr stop
+```
+
+Complete guide:
+
+```bash
+python3 -m boilr [-h] {start,stop,status,restart,debug} [-v]
 
 positional arguments:
   {start,stop,status,restart,debug}
@@ -28,8 +40,10 @@ positional arguments:
     restart             Restarts boilr daemon
     debug               Starts boilr daemon in debug mode
 
-optional arguments:
+optional arguments 1:
   -h, --help            show this help message and exit
+
+optional arguments 2:
   -v, --verbose         verbose mode
 ```
 
@@ -75,7 +89,7 @@ So, 300€ for the software and 50€ for the electical installation? Kind of, b
 
 At least I get to say: "Hey mum, look what I did"
 
-## TL; DR
+### TL; DR
 
 Heating water with not used power from the pv. That's it, cost analysis is just blabla.
 
@@ -87,9 +101,6 @@ Heating water with not used power from the pv. That's it, cost analysis is just 
 - tests (obvious)
 - store response (file or list)
   - running median (prevents system nervousness - contactor toggles often)
-- RPi.GPIO cleanup
-- check relay & contactor status
-- move config.py to docs/conf.py
 
 ### Optional
 
