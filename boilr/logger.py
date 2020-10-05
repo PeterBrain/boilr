@@ -23,7 +23,7 @@ console_handler.setFormatter(console_formatter)
 logging.basicConfig(
         handlers=[
                 file_handler,
-                console_handler
+                #console_handler
             ],
         #filename='/var/log/fronius_pv_boiler/boilr.log',
         #filemode='a', # 'w'

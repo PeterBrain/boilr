@@ -27,24 +27,33 @@ Stopping:
 python3 -m boilr stop
 ```
 
-Complete guide:
+Others:
+```bash
+python3 -m boilr [-h] [-v] {start,stop,status,restart,debug,manual {0,1}}
+```
+
+Complete guide (boilr -h):
 
 ```bash
-python3 -m boilr [-h] {start,stop,status,restart,debug} [-v]
+usage: boilr [-h] [-v] {start,stop,status,restart,debug,manual} ...
 
-positional arguments:
-  {start,stop,status,restart,debug}
+Water boiler automation with a Fronius pv inverter on a Raspberry Pi.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v, --verbose         log extra information
+
+commands:
+  {start,stop,status,restart,debug,manual}
     start               Starts boilr daemon
     stop                Stops boilr daemon
     status              Show the status of boilr daemon
     restart             Restarts boilr daemon
     debug               Starts boilr daemon in debug mode
+    manual              Manually override gpio channel (contactor)
 
-optional arguments 1:
-  -h, --help            show this help message and exit
-
-optional arguments 2:
-  -v, --verbose         verbose mode
+Additional hardware required. Please check:
+https://github.com/PeterBrain/boilr
 ```
 
 <!-- for later
@@ -109,4 +118,3 @@ Heating water with not used power from the pv. That's it, cost analysis is just 
   - run chrooted
   - reload config
 - logrotate
-- watchdog (config reload)

@@ -37,43 +37,58 @@ def run():
         logger.error("Unrecoverable error in request")
         daemon.daemon_stop()
         #raise SystemExit(e)
-
-    powerflow_site = response_powerflow.json()['Body']['Data']['Site']
-    powerflow_pgrid = powerflow_site['P_Grid'] or 0 # + from grid, - to grid, null no meter enabled
-    powerflow_pakku = powerflow_site['P_Akku'] or 0 # + discharge, - charge, null not active
-    powerflow_ppv = powerflow_site['P_PV'] or 0 # + production, null inverter not running
-
-    logger.debug("Powerflow grid: {0} W".format(powerflow_pgrid))
-    logger.debug("Powerflow akku: {0} W".format(powerflow_pakku))
-    logger.debug("Powerflow ppv: {0} W".format(powerflow_ppv))
-
-    powerflow_inverters = response_powerflow.json()['Body']['Data']['Inverters']['1']
-    powerflow_soc = powerflow_inverters['SOC'] # state of charge
-
-    logger.debug("SOC: {0} %".format(powerflow_soc))
-
-    if not rpi_gpio.gpio_mode(config.rpi_channel_relais_out, "out") or not rpi_gpio.gpio_mode(config.rpi_channel_relais_in, "in"):
-        logger.warning("Error while setting gpio mode")
-        #daemon.daemon_stop()
-
-    logger.debug("Checking confitions")
-    if powerflow_soc >= config.charge_threshold and powerflow_pakku < 0 and powerflow_pgrid < 0 and powerflow_ppv > config.ppv_threshold:
-        # soc over threshold & storage in charging mode & supply into grid & pv production over threshold
-        logger.debug("Conditions not met: contactor closed")
-        logger.info("Status: active")
-        gpio_output = rpi_gpio.output_relais(config.rpi_channel_relais_out, 1)
     else:
-        logger.debug("Conditions met: contactor open")
-        logger.info("Status: inactive")
+        powerflow_site = response_powerflow.json()['Body']['Data']['Site']
+        powerflow_pgrid = powerflow_site['P_Grid'] or 0 # + from grid, - to grid, null no meter enabled
+        powerflow_pakku = powerflow_site['P_Akku'] or 0 # + discharge, - charge, null not active
+        powerflow_ppv = powerflow_site['P_PV'] or 0 # + production, null inverter not running
+
+        logger.debug("Powerflow grid: {0} W".format(powerflow_pgrid))
+        logger.debug("Powerflow akku: {0} W".format(powerflow_pakku))
+        logger.debug("Powerflow ppv: {0} W".format(powerflow_ppv))
+
+        powerflow_inverters = response_powerflow.json()['Body']['Data']['Inverters']['1']
+        powerflow_soc = powerflow_inverters['SOC'] # state of charge
+
+        logger.debug("SOC: {0} %".format(powerflow_soc))
+
+        if not rpi_gpio.gpio_mode(config.rpi_channel_relais_out, "out") or not rpi_gpio.gpio_mode(config.rpi_channel_relais_in, "in"):
+            logger.warning("Error while setting gpio mode")
+            #daemon.daemon_stop()
+
+        logger.debug("Checking confitions")
+        if powerflow_soc >= config.charge_threshold and powerflow_pakku < 0 and powerflow_pgrid < 0 and powerflow_ppv > config.ppv_threshold:
+            # soc over threshold & storage in charging mode & supply into grid & pv production over threshold
+            logger.debug("Conditions not met: contactor closed")
+            logger.info("Status: active")
+            gpio_output = rpi_gpio.output_relais(config.rpi_channel_relais_out, 1)
+        else:
+            logger.debug("Conditions met: contactor open")
+            logger.info("Status: inactive")
+            gpio_output = rpi_gpio.output_relais(config.rpi_channel_relais_out, 0)
+
+        time.sleep(1)
+
+        if not gpio_output:
+            logger.warning("Error while setting gpio channel")
+            #daemon.daemon_stop()
+        elif not rpi_gpio.input_relais(config.rpi_channel_relais_in):
+            logger.warning("Error while reading gpio channel")
+            #daemon.daemon_stop()
+
+    return True
+
+
+def manual_override(args):
+    if args == 1:
+        logger.debug("Manual override: contactor closed")
+        logger.info("Status: active (manual)")
+        gpio_output = rpi_gpio.output_relais(config.rpi_channel_relais_out, 1)
+    elif args == 0:
+        logger.debug("Manual override: contactor open")
+        logger.info("Status: inactive (manual)")
         gpio_output = rpi_gpio.output_relais(config.rpi_channel_relais_out, 0)
-
-    time.sleep(1)
-
-    if not gpio_output:
-        logger.warning("Error while setting gpio channel")
-        #daemon.daemon_stop()
-    elif not rpi_gpio.input_relais(config.rpi_channel_relais_in):
-        logger.warning("Error while reading gpio channel")
-        #daemon.daemon_stop()
+    else:
+        logger.warning("Manual override failed. Wrong argument: {0}".format(args))
 
     return True
