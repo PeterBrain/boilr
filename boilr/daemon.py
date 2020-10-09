@@ -14,48 +14,52 @@ from daemon import pidfile
 logger = logging.getLogger(__name__)
 
 class MainCtrl:
-    thread_continue = True
+    def __init__(self, thread_continue=None, verbose=None):
+        self.thread_continue = thread_continue or True
+        self.verbose = verbose or False
 
 mainctrl = MainCtrl()
+
 
 def main_thread_stop(signum=None, frame=None):
     mainctrl.thread_continue = False
 
 
 def main_thread(args, mainctrl):
-    verbose = False
-    manual = 0
-
-    if hasattr(args, 'verbose'):
-        verbose = args.verbose
-
-    if verbose:
-        logger.info("ARGS: {0}".format(args))
-
     if hasattr(args, 'manual'):
         core_app.manual_override(args.manual[0])
 
     try:
         while mainctrl.thread_continue:
-            if verbose:
+            if mainctrl.verbose:
                 logger.debug("Continuing...")
 
             core_app.run()
             time.sleep(config.interval)
     except KeyboardInterrupt as ke:
-        if verbose:
+        if mainctrl.verbose:
             logger.warning("Interrupting...")
     except Exception as e:
-        if verbose:
+        if mainctrl.verbose:
             logger.error("Exception: {0}".format(str(e)))
     finally:
         rpi_gpio.cleanup()
+
+        if mainctrl.verbose:
+            logger.info("Verbose mode end")
+
         logger.info("Exiting...")
         #sys.exit(0)
 
 
 def daemon_start(args=None):
-    logger.info("Starting {0}...".format(config.prog_name))
+    if hasattr(args, 'verbose'):
+        mainctrl.verbose = args.verbose
+
+    if mainctrl.verbose:
+        logger.info("Starting {0} with ARGS: {1}".format(config.prog_name, args))
+    else:
+        logger.info("Starting {0}...".format(config.prog_name))
 
     if os.path.exists(config.pidpath):
         msg = "{0} is already running".format(config.prog_name)
@@ -68,7 +72,13 @@ def daemon_start(args=None):
 
 
 def daemon_stop(args=None):
-    logger.info("Stopping {0} with args {1}".format(config.prog_name, args))
+    if hasattr(args, 'verbose'):
+        mainctrl.verbose = args.verbose
+
+    if mainctrl.verbose:
+        logger.info("Stopping {0} with ARGS: {1}".format(config.prog_name, args))
+    else:
+        logger.info("Stopping {0}...".format(config.prog_name))
 
     if os.path.exists(config.pidpath):
         with open(config.pidpath) as pid:
