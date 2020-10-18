@@ -10,8 +10,27 @@ I don't know, I don't care. Just wanted to do this in my spare time. Otherwise I
 If you are not comfortable with some electrical parts, call an electrician, because they can definitely kill you. Things like networking and connecting the raspberry to the relay shouldn't be that hard.
 
 ## Additional Downloads
+
 - Fronius official API documentation: [Documentation - Fronius Solar API V1](https://www.fronius.com/~/downloads/Solar%20Energy/Operating%20Instructions/42%2C0410%2C2012.pdf)
 - Postman request collection: [Postman Collection - Fronius Solar API V1](https://www.getpostman.com/collections/27c663306206d7fbf502)
+
+## Setup
+
+1. Install python3
+   - `sudo apt install python3 python3-venv`
+1. Clone the repo
+   - `git clone https://github.com/PeterBrain/boilr.git boilr`
+   - `cd boilr`
+1. Create a virtual environment (not not... it's up to you) & activate it
+   - `python3 -m venv venv`
+   - `source venv/bin/activate`
+2. Install all requirements
+   - `pip install -r requirements.txt`
+3. Create boilr folder in /var/log
+   - `mkdir /var/log/boilr`
+4. Create boilr.log file in /var/log/boilr
+   - `touch /var/log/boilr/boilr.log`
+
 
 ## Usage
 
@@ -28,6 +47,7 @@ python3 -m boilr stop
 ```
 
 Others:
+
 ```bash
 python3 -m boilr [-h] [-v] {start,stop,status,restart,debug,manual {0,1}}
 ```

@@ -27,6 +27,7 @@ def main_thread_stop(signum=None, frame=None):
 
 def main_thread(args, mainctrl):
     if hasattr(args, 'manual'):
+        manual = True
         core_app.manual_override(args.manual[0])
 
     try:
@@ -43,7 +44,8 @@ def main_thread(args, mainctrl):
         if mainctrl.verbose:
             logger.error("Exception: {0}".format(str(e)))
     finally:
-        rpi_gpio.cleanup()
+        if not manual:
+            rpi_gpio.cleanup()
 
         if mainctrl.verbose:
             logger.info("Verbose mode end")

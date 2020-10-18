@@ -80,6 +80,10 @@ def run():
 
 
 def manual_override(args):
+    if not rpi_gpio.gpio_mode(config.rpi_channel_relais_out, "out") or not rpi_gpio.gpio_mode(config.rpi_channel_relais_in, "in"):
+        logger.warning("Error while setting gpio mode")
+        return False
+
     if args == 1:
         logger.debug("Manual override: contactor closed")
         logger.info("Status: active (manual)")
