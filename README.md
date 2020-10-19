@@ -24,13 +24,12 @@ If you are not comfortable with some electrical parts, call an electrician, beca
 1. Create a virtual environment (not not... it's up to you) & activate it
    - `python3 -m venv venv`
    - `source venv/bin/activate`
-2. Install all requirements
+1. Install all requirements
    - `pip install -r requirements.txt`
-3. Create boilr folder in /var/log
+1. Create boilr folder in /var/log
    - `mkdir /var/log/boilr`
-4. Create boilr.log file in /var/log/boilr
+1. Create boilr.log file in /var/log/boilr
    - `touch /var/log/boilr/boilr.log`
-
 
 ## Usage
 
