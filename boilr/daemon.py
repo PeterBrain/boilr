@@ -52,7 +52,6 @@ def main_thread(args, mainctrl):
             logger.info("Verbose mode end")
 
         logger.info("Exiting...")
-        #sys.exit(0)
 
 
 def daemon_start(args=None):
@@ -87,20 +86,26 @@ def daemon_stop(args=None):
         with open(config.pidpath) as pid:
             try:
                 os.kill(int(pid.readline()), signal.SIGINT)
+                while os.path.exists(config.pidpath):
+                    time.sleep(config.interval)
             except ProcessLookupError as ple:
                 os.remove(config.pidpath)
                 logger.error("ProcessLookupError: {0}".format(ple))
+                return False
             except Exception as e:
                 logger.error("Exception: {0}".format(e))
+                return False
     else:
         logger.error("Process isn't running (according to the absence of {0}).".format(config.pidpath))
+
+    return True
 
 
 def daemon_restart(args):
     logger.info("Restarting {0}...".format(config.prog_name))
-    daemon_stop()
-    time.sleep(1)
-    daemon_start(args)
+    logger.debug("Waiting for {0} to stop".format(config.prog_name))
+    if daemon_stop():
+        daemon_start(args)
 
 
 def daemon_debug(args):

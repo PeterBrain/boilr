@@ -42,10 +42,12 @@ def run():
         powerflow_pgrid = powerflow_site['P_Grid'] or 0 # + from grid, - to grid, null no meter enabled
         powerflow_pakku = powerflow_site['P_Akku'] or 0 # + discharge, - charge, null not active
         powerflow_ppv = powerflow_site['P_PV'] or 0 # + production, null inverter not running
+        powerflow_pload = powerflow_site['P_Load'] or 0 # - current load
 
         logger.debug("Powerflow grid: {0} W".format(powerflow_pgrid))
         logger.debug("Powerflow akku: {0} W".format(powerflow_pakku))
         logger.debug("Powerflow ppv: {0} W".format(powerflow_ppv))
+        logger.debug("Powerflow load: {0} W".format(powerflow_pload))
 
         powerflow_inverters = response_powerflow.json()['Body']['Data']['Inverters']['1']
         powerflow_soc = powerflow_inverters['SOC'] # state of charge
@@ -56,8 +58,8 @@ def run():
             logger.warning("Error while setting gpio mode")
             #daemon.daemon_stop()
 
-        logger.debug("Checking confitions")
-        if powerflow_soc >= config.charge_threshold and powerflow_pakku < 0 and powerflow_pgrid < 0 and powerflow_ppv > config.ppv_threshold:
+        logger.debug("Checking conditions")
+        if powerflow_soc >= config.charge_threshold and powerflow_pakku < config.pakku_threshold and powerflow_pgrid < config.pgrid_threshold and powerflow_ppv > (config.heater_power + powerflow_pload - config.ppv_threshold):
             # soc over threshold & storage in charging mode & supply into grid & pv production over threshold
             logger.debug("Conditions not met: contactor closed")
             logger.info("Status: active")
