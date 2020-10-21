@@ -11,6 +11,14 @@ import requests
 
 logger = logging.getLogger(__name__)
 
+class Boilr:
+    def __init__(self, status=None, status_prev=None):
+        self.status = status or False
+        self.status_prev = status_prev or True
+
+boilr = Boilr()
+
+
 def run():
     if not helpers.date_checker(config.active_date_range)[0]:
         rpi_gpio.cleanup()
@@ -36,7 +44,6 @@ def run():
     except Exception as e:
         logger.error("Unrecoverable error in request")
         daemon.daemon_stop()
-        #raise SystemExit(e)
     else:
         powerflow_site = response_powerflow.json()['Body']['Data']['Site']
         powerflow_pgrid = powerflow_site['P_Grid'] or 0 # + from grid, - to grid, null no meter enabled
@@ -54,46 +61,54 @@ def run():
 
         logger.debug("SOC: {0} %".format(powerflow_soc))
 
-        if not rpi_gpio.gpio_mode(config.rpi_channel_relais_out, "out") or not rpi_gpio.gpio_mode(config.rpi_channel_relais_in, "in"):
-            logger.warning("Error while setting gpio mode")
-            #daemon.daemon_stop()
-
-        logger.debug("Checking conditions")
-        if powerflow_soc >= config.charge_threshold and powerflow_pakku < config.pakku_threshold and powerflow_pgrid < config.pgrid_threshold and powerflow_ppv > (config.heater_power + powerflow_pload - config.ppv_threshold):
-            # soc over threshold & storage in charging mode & supply into grid & pv production over threshold
-            logger.debug("Conditions not met: contactor closed")
-            logger.info("Status: active")
-            gpio_output = rpi_gpio.output_relais(config.rpi_channel_relais_out, 1)
+        if not rpi_gpio.gpio_mode(config.rpi_channel_relay_out, "out"):
+            logger.warning("Error while setting gpio mode for: output")
+            logger.debug("skipping condition evaluation")
+            return False
         else:
-            logger.debug("Conditions met: contactor open")
-            logger.info("Status: inactive")
-            gpio_output = rpi_gpio.output_relais(config.rpi_channel_relais_out, 0)
+            logger.debug("Checking conditions")
+            if (powerflow_soc >= config.charge_threshold and # soc over threshold
+                powerflow_pakku < config.pakku_threshold and # storage in charging mode (with threshold)
+                powerflow_pgrid < config.pgrid_threshold and # supply into grid (with threshold)
+                powerflow_ppv > (config.heater_power + powerflow_pload - config.ppv_threshold) # pv production over current load + expected load with threshold
+            ):
+                boilr.status = True
+            else:
+                boilr.status = False
 
-        time.sleep(1)
+            if boilr.status_prev != boilr.status:
+                logger.debug("Conditions {0} met: contactor {1}".format("not" if not boilr.status else "", "closed" if boilr.status else "open"))
+                logger.info("Status: {0}".format("active" if boilr.status else "inactive"))
+            else:
+                logger.debug("Contactor unchanged - previous state: {0}".format(boilr.status_prev))
 
-        if not gpio_output:
-            logger.warning("Error while setting gpio channel")
-            #daemon.daemon_stop()
-        elif not rpi_gpio.input_relais(config.rpi_channel_relais_in):
-            logger.warning("Error while reading gpio channel")
-            #daemon.daemon_stop()
+            boilr.status_prev = boilr.status
 
-    return True
+            if not rpi_gpio.output_relay(config.rpi_channel_relay_out, boilr.status):
+                logger.warning("Error while setting gpio channel")
+                return False
+
+        if not rpi_gpio.gpio_mode(config.rpi_channel_relay_in, "in"):
+            logger.warning("Error while setting gpio mode for: input")
+            return False
+        else:
+            if not rpi_gpio.input_relay(config.rpi_channel_relay_in):
+                logger.warning("Error while reading gpio channel")
+                return False
+
+    finally:
+        return True
 
 
 def manual_override(args):
-    if not rpi_gpio.gpio_mode(config.rpi_channel_relais_out, "out") or not rpi_gpio.gpio_mode(config.rpi_channel_relais_in, "in"):
+    if not rpi_gpio.gpio_mode(config.rpi_channel_relay_out, "out") or not rpi_gpio.gpio_mode(config.rpi_channel_relay_in, "in"):
         logger.warning("Error while setting gpio mode")
         return False
 
-    if args == 1:
-        logger.debug("Manual override: contactor closed")
-        logger.info("Status: active (manual)")
-        gpio_output = rpi_gpio.output_relais(config.rpi_channel_relais_out, 1)
-    elif args == 0:
-        logger.debug("Manual override: contactor open")
-        logger.info("Status: inactive (manual)")
-        gpio_output = rpi_gpio.output_relais(config.rpi_channel_relais_out, 0)
+    if args in {0, 1}:
+        logger.debug("Manual override: contactor {0}".format("closed" if args == 1 else "open"))
+        logger.info("Status: {0} (manual)".format("active" if args == 1 else "inactive"))
+        gpio_output = rpi_gpio.output_relay(config.rpi_channel_relay_out, True if args == 1 else False)
     else:
         logger.warning("Manual override failed. Wrong argument: {0}".format(args))
 

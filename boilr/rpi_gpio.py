@@ -3,13 +3,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def gpio_mode(channel, mode):
+def gpio_mode(channel, mode: str):
     return False
 
-def output_relais(channel, state):
+def output_relay(channel, state: bool):
     return False
 
-def input_relais(channel):
+def input_relay(channel):
     return False
 
 def cleanup():
@@ -22,7 +22,7 @@ except RuntimeError as re:
 except Exception as e:
     logger.error("Unexpected: Something went wrong")
 else:
-    def gpio_mode(channel, mode):
+    def gpio_mode(channel, mode: str):
         logger.debug("Define gpio channel {0} and assign mode '{1}'".format(channel, mode))
         GPIO.setmode(GPIO.BCM) # GPIO number (GPIO.BOARD for board number)
 
@@ -37,21 +37,18 @@ else:
         return True
 
 
-    def output_relais(channel, state):
-        if state == 0:
-            logger.debug("Set state of gpio channel {0} to '{1}' (low)".format(channel, state))
-            GPIO.output(channel, GPIO.LOW)
-        elif state == 1:
-            logger.debug("Set state of gpio channel {0} to '{1}' (high)".format(channel, state))
-            GPIO.output(channel, GPIO.HIGH)
+    def output_relay(channel, state: bool):
+        if state:
+            relay = True
         else:
-            logger.warning("GPIO state: '{0}' is not a valid state".format(state))
-            return False
+            relay = False
 
+        logger.debug("Set state of gpio channel {0} to '{1}'".format(channel, state))
+        GPIO.output(channel, GPIO.HIGH if relay else GPIO.LOW)
         return True
 
 
-    def input_relais(channel):
+    def input_relay(channel):
         logger.debug("Reading gpio channel {0}".format(channel))
         input = GPIO.input(channel) # True or False
         return input
@@ -61,6 +58,7 @@ else:
         logger.debug("Reset gpio channels")
         GPIO.cleanup()
         return True
+
 
 finally:
     pass
