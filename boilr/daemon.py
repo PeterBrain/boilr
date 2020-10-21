@@ -14,9 +14,10 @@ from daemon import pidfile
 logger = logging.getLogger(__name__)
 
 class MainCtrl:
-    def __init__(self, thread_continue=None, verbose=None):
+    def __init__(self, thread_continue=None, verbose=None, manual=None):
         self.thread_continue = thread_continue or True
         self.verbose = verbose or False
+        self.manual = manual or False
 
 mainctrl = MainCtrl()
 
@@ -27,7 +28,7 @@ def main_thread_stop(signum=None, frame=None):
 
 def main_thread(args, mainctrl):
     if hasattr(args, 'manual'):
-        manual = True
+        mainctrl.manual = True
         core_app.manual_override(args.manual[0])
 
     try:
@@ -44,7 +45,7 @@ def main_thread(args, mainctrl):
         if mainctrl.verbose:
             logger.error("Exception: {0}".format(str(e)))
     finally:
-        if not manual:
+        if not mainctrl.manual:
             rpi_gpio.cleanup()
 
         if mainctrl.verbose:
