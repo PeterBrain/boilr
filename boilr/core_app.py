@@ -15,18 +15,36 @@ class Boilr:
     def __init__(self, status=None, status_prev=None):
         self.status = status or False
         self.status_prev = status_prev or True
+        self.date_check = True
+        self.date_check_prev = False
+        self.time_check = True
+        self.time_check_prev = False
 
 boilr = Boilr()
 
 
 def run():
-    if not helpers.date_checker(config.active_date_range)[0]:
-        rpi_gpio.cleanup()
-        return False
+    date_check = helpers.date_checker(config.active_date_range)
+    if not date_check[0]:
+        boilr.date_check = False
 
-    if not helpers.time_checker(config.active_time_range)[0]:
-        rpi_gpio.cleanup()
-        return False
+    time_check = helpers.time_checker(config.active_time_range)
+    if not time_check[0]:
+        boilr.time_check_prev = False
+
+    if boilr.date_check_prev != boilr.date_check:
+        logger.info(date_check[1])
+        boilr.date_check_prev = boilr.date_check
+        if not date_check:
+            rpi_gpio.cleanup()
+            return False
+
+    if boilr.time_check_prev != boilr.time_check:
+        logger.info(date_check[1])
+        boilr.time_check_prev = boilr.time_check
+        if not time_check:
+            rpi_gpio.cleanup()
+            return False
 
     logger.debug("Gathering information")
     inverter_url = config.scheme + config.ip
@@ -79,10 +97,9 @@ def run():
             if boilr.status_prev != boilr.status:
                 logger.debug("Conditions {0} met: contactor {1}".format("not" if not boilr.status else "", "closed" if boilr.status else "open"))
                 logger.info("Status: {0}".format("active" if boilr.status else "inactive"))
+                boilr.status_prev = boilr.status
             else:
                 logger.debug("Contactor unchanged - previous state: {0}".format(boilr.status_prev))
-
-            boilr.status_prev = boilr.status
 
             if not rpi_gpio.output_relay(config.rpi_channel_relay_out, boilr.status):
                 logger.warning("Error while setting gpio channel")

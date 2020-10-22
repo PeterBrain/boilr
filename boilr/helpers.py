@@ -23,7 +23,7 @@ def date_checker(active_date_range):
             return(True, msg)
         else:
             msg = "Date is not in active range"
-            logger.info(msg)
+            logger.debug(msg)
             return(False, msg)
 
 
@@ -47,5 +47,5 @@ def time_checker(active_time_range):
             return(True, msg)
         else:
             msg = "Time is not in active range"
-            logger.info(msg)
+            logger.debug(msg)
             return(False, msg)
