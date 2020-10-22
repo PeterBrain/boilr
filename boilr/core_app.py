@@ -37,14 +37,15 @@ def run():
         boilr.date_check_prev = boilr.date_check
         if not date_check:
             rpi_gpio.cleanup()
-            return False
 
     if boilr.time_check_prev != boilr.time_check:
         logger.info(time_check[1])
         boilr.time_check_prev = boilr.time_check
         if not time_check:
             rpi_gpio.cleanup()
-            return False
+
+    if not date_check or not time_check:
+        return False
 
     logger.debug("Gathering information")
     inverter_url = config.scheme + config.ip
