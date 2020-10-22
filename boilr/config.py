@@ -6,7 +6,7 @@ interval = 10 # check fronius api every x seconds
 rpi_channel_relay_out = 17 # board number 11
 rpi_channel_relay_in = 27 # board number 13
 
-charge_threshold = 20 # min battery state of charge in %
+charge_threshold = 80 # min battery state of charge in %
 ppv_threshold = 100 # min pv production in W
 pgrid_threshold = 1000 # threshold power from grid in W
 pakku_threshold = 1000 # threshold power from akku in W
@@ -14,7 +14,7 @@ pakku_threshold = 1000 # threshold power from akku in W
 heater_power = 2600 # power of the heating element in W (power availability)
 
 active_date_range = ["01-05", "31-10"] # may - oct (day-month)
-active_time_range = ["00:00", "23:59"] # after charging the battery; before discharging the battery (hour:minute) 11:00 - 16:30
+active_time_range = ["10:30", "16:30"] # after charging the battery; before discharging the battery (hour:minute) 11:00 - 16:30
 
 request_timeout = 5 # timeout for requests in seconds
 scheme = "http://"
