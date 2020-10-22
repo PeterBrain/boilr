@@ -35,16 +35,16 @@ def run():
     if boilr.date_check_prev != boilr.date_check:
         logger.info(date_check[1])
         boilr.date_check_prev = boilr.date_check
-        if not date_check:
+        if not date_check[0]:
             rpi_gpio.cleanup()
 
     if boilr.time_check_prev != boilr.time_check:
         logger.info(time_check[1])
         boilr.time_check_prev = boilr.time_check
-        if not time_check:
+        if not time_check[0]:
             rpi_gpio.cleanup()
 
-    if not date_check or not time_check:
+    if not date_check[0] or not time_check[0]:
         return False
 
     logger.debug("Gathering information")
