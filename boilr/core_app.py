@@ -16,9 +16,9 @@ class Boilr:
         self.status = status or False
         self.status_prev = status_prev or True
         self.date_check = True
-        self.date_check_prev = False
+        self.date_check_prev = True
         self.time_check = True
-        self.time_check_prev = False
+        self.time_check_prev = True
 
 boilr = Boilr()
 
@@ -30,7 +30,7 @@ def run():
 
     time_check = helpers.time_checker(config.active_time_range)
     if not time_check[0]:
-        boilr.time_check_prev = False
+        boilr.time_check = False
 
     if boilr.date_check_prev != boilr.date_check:
         logger.info(date_check[1])
@@ -40,7 +40,7 @@ def run():
             return False
 
     if boilr.time_check_prev != boilr.time_check:
-        logger.info(date_check[1])
+        logger.info(time_check[1])
         boilr.time_check_prev = boilr.time_check
         if not time_check:
             rpi_gpio.cleanup()
