@@ -8,17 +8,26 @@ import sys, os
 import time
 import logging
 import requests
+import statistics
 
 logger = logging.getLogger(__name__)
 
 class Boilr:
-    def __init__(self, status=None, status_prev=None):
+    def __init__(self, status=None, status_prev=None, pload: [float]=None, ppv: [float]=None, pakku: [float]=None, pgrid: [float]=None):
         self.status = status or False
         self.status_prev = status_prev or True
         self.date_check = True
         self.date_check_prev = True
         self.time_check = True
         self.time_check_prev = True
+        self.pload = pload or [0]
+        self.ppv = ppv or [0]
+        self.pakku = pakku or [0]
+        self.pgrid = pgrid or [0]
+        self.pload_median = 0
+        self.ppv_median = 0
+        self.pakku_median = 0
+        self.pgrid_median = 0
 
 boilr = Boilr()
 
@@ -27,25 +36,31 @@ def run():
     date_check = helpers.date_checker(config.active_date_range)
     if not date_check[0]:
         boilr.date_check = False
+    else:
+        boilr.date_check = True
 
     time_check = helpers.time_checker(config.active_time_range)
     if not time_check[0]:
         boilr.time_check = False
+    else:
+        boilr.time_check = True
 
-    if boilr.date_check_prev != boilr.date_check:
-        logger.info(date_check[1])
-        boilr.date_check_prev = boilr.date_check
-        if not date_check[0]:
-            rpi_gpio.cleanup()
+    if not boilr.date_check or not boilr.time_check:
+        if boilr.date_check_prev != boilr.date_check:
+            logger.info(date_check[1])
+            boilr.date_check_prev = boilr.date_check
+            if not boilr.date_check:
+                rpi_gpio.cleanup()
 
-    if boilr.time_check_prev != boilr.time_check:
-        logger.info(time_check[1])
-        boilr.time_check_prev = boilr.time_check
-        if not time_check[0]:
-            rpi_gpio.cleanup()
+        if boilr.time_check_prev != boilr.time_check:
+            logger.info(time_check[1])
+            boilr.time_check_prev = boilr.time_check
+            if not boilr.time_check:
+                rpi_gpio.cleanup()
 
-    if not date_check[0] or not time_check[0]:
         return False
+    else:
+        pass
 
     logger.debug("Gathering information")
     inverter_url = config.scheme + config.ip
@@ -75,6 +90,28 @@ def run():
         logger.debug("Powerflow ppv: {0} W".format(powerflow_ppv))
         logger.debug("Powerflow load: {0} W".format(powerflow_pload))
 
+        if len(boilr.pgrid) >= config.moving_median_list_size:
+            del boilr.pgrid[0]
+            del boilr.pakku[0]
+            del boilr.ppv[0]
+            del boilr.pload[0]
+
+        boilr.pgrid.append(powerflow_pgrid)
+        boilr.pakku.append(powerflow_pakku)
+        boilr.ppv.append(powerflow_ppv)
+        boilr.pload.append(powerflow_pload)
+
+        boilr.pgrid_median = statistics.median(boilr.pgrid)
+        boilr.pakku_median = statistics.median(boilr.pakku)
+        boilr.ppv_median = statistics.median(boilr.ppv)
+        boilr.pload_median = statistics.median(boilr.pload)
+        #logger.info(boilr.pgrid[-5:]) # last 5 elements
+
+        logger.debug("Median power grid: {0} W".format(boilr.pgrid_median))
+        logger.debug("Median power akku: {0} W".format(boilr.pakku_median))
+        logger.debug("Median power ppv: {0} W".format(boilr.ppv_median))
+        logger.debug("Median power load: {0} W".format(boilr.pload_median))
+
         powerflow_inverters = response_powerflow.json()['Body']['Data']['Inverters']['1']
         powerflow_soc = powerflow_inverters['SOC'] # state of charge
 
@@ -87,9 +124,9 @@ def run():
         else:
             logger.debug("Checking conditions")
             if (powerflow_soc >= config.charge_threshold and # soc over threshold
-                powerflow_pakku < config.pakku_threshold and # storage in charging mode (with threshold)
-                powerflow_pgrid < config.pgrid_threshold and # supply into grid (with threshold)
-                powerflow_ppv > (config.heater_power + powerflow_pload - config.ppv_threshold) # pv production over current load + expected load with threshold
+                boilr.pakku_median < config.pakku_threshold and # storage in charging mode (with threshold)
+                boilr.pgrid_median < config.pgrid_threshold and # supply into grid (with threshold)
+                powerflow_ppv > (config.heater_power + boilr.pload_median - config.ppv_threshold) # pv production over current load + expected load with threshold
             ):
                 boilr.status = True
             else:

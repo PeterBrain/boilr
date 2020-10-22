@@ -6,6 +6,7 @@ interval = 10 # check fronius api every x seconds
 rpi_channel_relay_out = 17 # board number 11
 rpi_channel_relay_in = 27 # board number 13
 
+moving_median_list_size = 5 # size of the array for past request values
 charge_threshold = 80 # min battery state of charge in %
 ppv_threshold = 100 # min pv production in W
 pgrid_threshold = 1000 # threshold power from grid in W

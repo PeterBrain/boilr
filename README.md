@@ -94,7 +94,7 @@ python3 setup.py
 Here is a list of all parts I used:
 
 - contactor to switch the three phases AC (~20€)
-- 5x2.5mm2 copper stranded cable
+- 5x1.5mm2 copper stranded cable (~10€)
   - ferrules (only if you have stranded wires)
 - circuit breaker (had one laying around, but around 20€)
 - distribution box (~20€)
@@ -125,10 +125,9 @@ Heating water with not used power from the pv. That's it, cost analysis is just 
 
 ### Required
 
-- installer
+- installer (mkdir for log and pid; install requirements)
 - tests (obvious)
 - store response (file or list)
-  - running median (prevents system nervousness - contactor toggles often)
 
 ### Optional
 
