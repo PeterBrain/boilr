@@ -7,10 +7,10 @@ rpi_channel_relay_out = 17 # board number 11
 rpi_channel_relay_in = 27 # board number 13
 
 moving_median_list_size = 5 # size of the array for past request values
-charge_threshold = 80 # min battery state of charge in %
-ppv_threshold = 100 # min pv production in W
-pgrid_threshold = 1000 # threshold power from grid in W
-pakku_threshold = 1000 # threshold power from akku in W
+charge_threshold = 85 # min battery state of charge in %
+ppv_tolerance = 100 # tolerance pv production in W
+pgrid_tolerance = 500 # tolerance power from grid in W
+pakku_tolerance = 500 # tolerance power from akku in W
 
 heater_power = 2600 # power of the heating element in W (power availability)
 

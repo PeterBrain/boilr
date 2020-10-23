@@ -105,7 +105,6 @@ def run():
         boilr.pakku_median = statistics.median(boilr.pakku)
         boilr.ppv_median = statistics.median(boilr.ppv)
         boilr.pload_median = statistics.median(boilr.pload)
-        #logger.info(boilr.pgrid[-5:]) # last 5 elements
 
         logger.debug("Median power grid: {0} W".format(boilr.pgrid_median))
         logger.debug("Median power akku: {0} W".format(boilr.pakku_median))
@@ -124,9 +123,13 @@ def run():
         else:
             logger.debug("Checking conditions")
             if (powerflow_soc >= config.charge_threshold and # soc over threshold
-                boilr.pakku_median < config.pakku_threshold and # storage in charging mode (with threshold)
-                boilr.pgrid_median < config.pgrid_threshold and # supply into grid (with threshold)
-                powerflow_ppv > (config.heater_power + boilr.pload_median - config.ppv_threshold) # pv production over current load + expected load with threshold
+                boilr.pakku_median < config.pakku_tolerance and # storage in charging mode (with tolerance)
+                boilr.pgrid_median < config.pgrid_tolerance and # supply into grid (with tolerance)
+                powerflow_ppv > (
+                    (config.heater_power if not boilr.status else 0)
+                    + boilr.pload_median
+                    - config.ppv_tolerance
+                ) # pv production is over current load + expected load with tolerance
             ):
                 boilr.status = True
             else:
