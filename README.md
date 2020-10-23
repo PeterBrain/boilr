@@ -127,7 +127,7 @@ Heating water with not used power from the pv. That's it, cost analysis is just 
 
 - installer (mkdir for log and pid; install requirements)
 - tests (obvious)
-- store response (file or list)
+- store response (file)
 
 ### Optional
 

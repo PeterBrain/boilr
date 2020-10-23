@@ -20,14 +20,14 @@ class Boilr:
         self.date_check_prev = True
         self.time_check = True
         self.time_check_prev = True
-        self.pload = pload or [0]
-        self.ppv = ppv or [0]
         self.pakku = pakku or [0]
         self.pgrid = pgrid or [0]
+        self.pload = pload or [0]
+        self.ppv = ppv or [0]
+        self.pgrid_median = 0
+        self.pakku_median = 0
         self.pload_median = 0
         self.ppv_median = 0
-        self.pakku_median = 0
-        self.pgrid_median = 0
 
 boilr = Boilr()
 
@@ -98,13 +98,12 @@ def run():
 
         boilr.pgrid.append(powerflow_pgrid)
         boilr.pakku.append(powerflow_pakku)
-        boilr.ppv.append(powerflow_ppv)
         boilr.pload.append(powerflow_pload)
-
+        boilr.ppv.append(powerflow_ppv)
         boilr.pgrid_median = statistics.median(boilr.pgrid)
         boilr.pakku_median = statistics.median(boilr.pakku)
-        boilr.ppv_median = statistics.median(boilr.ppv)
         boilr.pload_median = statistics.median(boilr.pload)
+        boilr.ppv_median = statistics.median(boilr.ppv)
 
         logger.debug("Median power grid: {0} W".format(boilr.pgrid_median))
         logger.debug("Median power akku: {0} W".format(boilr.pakku_median))
@@ -149,10 +148,11 @@ def run():
         if not rpi_gpio.gpio_mode(config.rpi_channel_relay_in, "in"):
             logger.warning("Error while setting gpio mode for: input")
             return False
+        elif not rpi_gpio.input_relay(config.rpi_channel_relay_in):
+            logger.warning("Error while reading gpio channel")
+            return False
         else:
-            if not rpi_gpio.input_relay(config.rpi_channel_relay_in):
-                logger.warning("Error while reading gpio channel")
-                return False
+            pass
 
     finally:
         return True

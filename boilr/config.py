@@ -15,7 +15,7 @@ pakku_tolerance = 500 # tolerance power from akku in W
 heater_power = 2600 # power of the heating element in W (power availability)
 
 active_date_range = ["01-05", "31-10"] # may - oct (day-month)
-active_time_range = ["10:30", "16:30"] # after charging the battery; before discharging the battery (hour:minute) 11:00 - 16:30
+active_time_range = ["10:30", "16:30"] # after charging the battery; before discharging the battery (hour:minute) 10:30 - 16:30
 
 request_timeout = 5 # timeout for requests in seconds
 scheme = "http://"
