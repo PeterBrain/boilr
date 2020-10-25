@@ -25,7 +25,7 @@ logging.basicConfig(
                 file_handler,
                 #console_handler
             ],
-        #filename='/var/log/fronius_pv_boiler/boilr.log',
+        #filename='/var/log/boilr/boilr.log',
         #filemode='a', # 'w'
         level=logging.INFO, # DEBUG, INFO, WARNING, ERROR, CRITICAL
         format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",

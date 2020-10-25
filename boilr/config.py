@@ -2,20 +2,22 @@ import os, sys
 
 prog_name = "boilr" # program name
 
-interval = 10 # check fronius api every x seconds
 rpi_channel_relay_out = 17 # board number 11
 rpi_channel_relay_in = 27 # board number 13
 
+interval = 10 # check fronius api every x seconds
+start_timeout = 2 # min time between switching off and on again
+
 moving_median_list_size = 5 # size of the array for past request values
 charge_threshold = 85 # min battery state of charge in %
+#pgrid_tolerance = 500 # tolerance power from grid in W
+#pakku_tolerance = 500 # tolerance power from akku in W
 ppv_tolerance = 100 # tolerance pv production in W
-pgrid_tolerance = 500 # tolerance power from grid in W
-pakku_tolerance = 500 # tolerance power from akku in W
 
-heater_power = 2600 # power of the heating element in W (power availability)
+heater_power = 2600 # power of the heating element in W (power availability) (2550W in datasheet)
 
-active_date_range = ["01-05", "31-10"] # may - oct (day-month)
-active_time_range = ["10:30", "16:30"] # after charging the battery; before discharging the battery (hour:minute) 10:30 - 16:30
+active_date_range = ["01-05", "31-10"] # may - oct (day-month) ([start, end])
+active_time_range = ["10:00", "17:00"] # after charging the battery; before discharging the battery (hour:minute) 10:00 - 17:00 ([start, end])
 
 request_timeout = 5 # timeout for requests in seconds
 scheme = "http://"
