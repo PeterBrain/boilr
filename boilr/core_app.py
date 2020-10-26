@@ -14,26 +14,22 @@ from datetime import datetime, timedelta
 logger = logging.getLogger(__name__)
 
 class Boilr:
-    def __init__(self, status=None, status_prev=None, pload: [float]=None, ppv: [float]=None, pakku: [float]=None, pgrid: [float]=None):
+    def __init__(self, status=None, status_prev=None, pload: [float]=None, ppv: [float]=None):
         self.status = (status or False, datetime.now())
         self.status_prev = (status_prev or True, datetime.now())
         self.date_check = True
         self.date_check_prev = True
         self.time_check = True
         self.time_check_prev = True
-        #self.pakku = pakku or [0]
-        #self.pgrid = pgrid or [0]
         self.pload = pload or [0]
         self.ppv = ppv or [0]
-        #self.pgrid_median = 0
-        #self.pakku_median = 0
         self.pload_median = 0
         self.ppv_median = 0
 
 
     def update_status(self, state):
         self.status = (state, datetime.now())
-        logger.debug("Status changed to {0}".format(state))
+        logger.debug("Status updated: {0}".format(state))
 
 
 boilr = Boilr()
@@ -100,22 +96,14 @@ def run():
         logger.debug("Powerflow load: {0} W".format(powerflow_pload))
 
         if len(boilr.pload) >= config.moving_median_list_size:
-            #del boilr.pgrid[0]
-            #del boilr.pakku[0]
             del boilr.ppv[0]
             del boilr.pload[0]
 
-        #boilr.pgrid.append(powerflow_pgrid)
-        #boilr.pakku.append(powerflow_pakku)
         boilr.pload.append(powerflow_pload)
         boilr.ppv.append(powerflow_ppv)
-        #boilr.pgrid_median = statistics.median(boilr.pgrid)
-        #boilr.pakku_median = statistics.median(boilr.pakku)
         boilr.pload_median = statistics.median(boilr.pload)
         boilr.ppv_median = statistics.median(boilr.ppv)
 
-        #logger.debug("Median power grid: {0} W".format(boilr.pgrid_median))
-        #logger.debug("Median power akku: {0} W".format(boilr.pakku_median))
         logger.debug("Median power ppv: {0} W".format(boilr.ppv_median))
         logger.debug("Median power load: {0} W".format(boilr.pload_median))
 
@@ -132,11 +120,9 @@ def run():
         else:
             logger.debug("Checking conditions")
             if (powerflow_soc >= config.charge_threshold and # soc over threshold
-                #boilr.pakku_median < config.pakku_tolerance and # storage in charging mode (with tolerance)
-                #boilr.pgrid_median < config.pgrid_tolerance and # supply into grid (with tolerance)
                 boilr.ppv_median > (
-                    (config.heater_power if not boilr.status[0] else 0)
-                    + boilr.pload_median
+                    (config.heater_power if not boilr.status_prev[0] else 0)
+                    + abs(boilr.pload_median)
                     - config.ppv_tolerance
                 ) # median pv production is over median load + expected load with tolerance
             ):
@@ -146,15 +132,15 @@ def run():
 
             ## check start timeout (instant off, delayed starting)
             if boilr.status_prev[0] or not boilr.status_prev[0] and boilr.status_prev[1] < datetime.now() - timedelta(minutes=config.start_timeout):
-                if not rpi_gpio.output_relay(config.rpi_channel_relay_out, boilr.status[0]):
-                    logger.warning("Error while setting gpio channel")
-                    return False
-
                 ## check if status unchanged
                 if boilr.status_prev[0] != boilr.status[0]:
                     logger.debug("Conditions {0} met: contactor {1}".format("not" if not boilr.status[0] else "", "closed" if boilr.status[0] else "open"))
                     logger.info("Status: {0}".format("active" if boilr.status[0] else "inactive"))
                     boilr.status_prev = boilr.status
+
+                    if not rpi_gpio.output_relay(config.rpi_channel_relay_out, boilr.status[0]):
+                        logger.warning("Error while setting gpio channel")
+                        return False
                 else:
                     logger.debug("Contactor unchanged - previous state: {0}".format(boilr.status_prev[0]))
 

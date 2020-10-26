@@ -10,8 +10,6 @@ start_timeout = 2 # min time between switching off and on again
 
 moving_median_list_size = 5 # size of the array for past request values
 charge_threshold = 85 # min battery state of charge in %
-#pgrid_tolerance = 500 # tolerance power from grid in W
-#pakku_tolerance = 500 # tolerance power from akku in W
 ppv_tolerance = 100 # tolerance pv production in W
 
 heater_power = 2600 # power of the heating element in W (power availability) (2550W in datasheet)
