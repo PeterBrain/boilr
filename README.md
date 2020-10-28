@@ -7,6 +7,12 @@ The goal was to use the overproduction of the PV system and increase the self co
 That's the theory. But what about special cases like an already running heater? Or taking away power generated from the pv and you have to use power from the grid to use the stove?
 I don't know, I don't care. Just wanted to do this in my spare time. Otherwise I would have wasted the time invested in this project by watching Netflix or Youtube.
 
+![sufficiency over one day](./docs/sufficiency.jpg)
+The yellow area shows the own consumption of the produced energy after using Boilr (this program) to increase self-sufficiency. The blue line is the overall energy consumption. The gray area shows produced energy that is fed into the grid. The green line is the charging level of the battery in percent, whereas the green area shows the produced energy fed into the battery.
+
+![self-sufficiency example](./docs/fronius.jpg)
+Here you can see that all the energy from the pv system is either used to charge the battery or consumed directly (all electrical consumer + heating element of the water heater)
+
 If you are not comfortable with some electrical parts, call an electrician, because they can definitely kill you. Things like networking and connecting the raspberry to the relay shouldn't be that hard.
 
 ## Additional Downloads
@@ -30,6 +36,8 @@ If you are not comfortable with some electrical parts, call an electrician, beca
    - `mkdir /var/log/boilr`
 1. Create boilr.log file in /var/log/boilr
    - `touch /var/log/boilr/boilr.log`
+1. Edit configfile to your needs
+   - `vi boilr/config.py`
 
 ## Usage
 
@@ -104,6 +112,12 @@ Here is a list of all parts I used:
 - network switch (used, gigabit (overkill) around 5-10€, or an old router with a builtin switch for free)
 
 I could have used an wifi dongle instead of an ethernet cable, but the signal strengh in my cellar (where the water boiler is) is somewhat inexistent. Plus, the pv inverter (already connected via lan) is also there.
+
+Inside | Outside
+:-----:|:-------:
+![inside view](./docs/inside.jpg) | ![outside view](./docs/outside.jpg)
+
+You can judge me for that second schuko socket, because I messed up and didn't think about the lid. The lid does not close if there is anything plugged into the schuko socket on the hut rail. Thats why there is a second one inside the distribution box.
 
 ## Cost analysis
 
