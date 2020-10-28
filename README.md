@@ -115,7 +115,7 @@ I could have used an wifi dongle instead of an ethernet cable, but the signal st
 
 Inside | Outside
 :-----:|:-------:
-![inside view](./docs/inside.jpg) | ![outside view](./docs/outside.jpg)
+![inside view](./docs/inside.JPG) | ![outside view](./docs/outside.JPG)
 
 You can judge me for that second schuko socket, because I messed up and didn't think about the lid. The lid does not close if there is anything plugged into the schuko socket on the hut rail. Thats why there is a second one inside the distribution box.
 
