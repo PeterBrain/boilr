@@ -13,7 +13,7 @@ The yellow area shows the own consumption of the produced energy after using Boi
 ![self-sufficiency example](./docs/fronius.jpg)
 Here you can see that all the energy from the pv system is either used to charge the battery or consumed directly (all electrical consumer + heating element of the water heater)
 
-If you are not comfortable with some electrical parts, call an electrician, because they can definitely kill you. Things like networking and connecting the raspberry to the relay shouldn't be that hard.
+If you are not comfortable with the electrical part, call an electrician, because it can definitely kill you. Although, things like networking and connecting the raspberry to the relay shouldn't be that hard.
 
 ## Additional Downloads
 
@@ -117,7 +117,7 @@ Inside | Outside
 :-----:|:-------:
 ![inside view](./docs/inside.JPG) | ![outside view](./docs/outside.JPG)
 
-You can judge me for that second schuko socket, because I messed up and didn't think about the lid. The lid does not close if there is anything plugged into the schuko socket on the hut rail. Thats why there is a second one inside the distribution box.
+You can judge me for that second schuko socket, because I messed up and didn't think about the lid of the distribution box. The lid does not close if there is anything plugged into the schuko socket on the hut rail. Thats why there is a second one inside the box.
 
 ## Cost analysis
 
@@ -135,6 +135,10 @@ At least I get to say: "Hey mum, look what I did"
 
 Heating water with not used power from the pv. That's it, cost analysis is just blabla.
 
+## Weaknesses
+
+This current design has a major drawback: Unlike Ohmpilot, a comparable product with a much higher efficiency thanks to PWM, my installation has only two states. It's either on (with full power to the heating coil), or off. This efficiency is lost on days where pv production isn't just enough to provide the current consumption of the house plus heating water.
+
 ## TODO
 
 ### Required
@@ -150,3 +154,6 @@ Heating water with not used power from the pv. That's it, cost analysis is just 
   - run chrooted
   - reload config
 - logrotate
+- containerize
+- api or publish/subscribe (mqtt) interface
+  - home-assistant
