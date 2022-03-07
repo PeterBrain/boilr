@@ -1,0 +1,15 @@
+version: '3'
+services:
+  boilr:
+    container_name: boilr
+    build: .
+    #volumes:
+    #  - /config:/config
+    restart: unless-stopped
+    privileged: true
+    networks:
+      - boilr-network
+
+networks:
+  boilr-network:
+    driver: bridge

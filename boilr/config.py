@@ -6,7 +6,7 @@ rpi_channel_relay_out = 17 # board number 11
 rpi_channel_relay_in = 27 # board number 13
 
 interval = 10 # check fronius api every x seconds
-start_timeout = 2 # min time between switching off and on again
+start_timeout = 2 # min time between switching off and on again in minutes
 
 moving_median_list_size = 5 # size of the array for past request values
 charge_threshold = 85 # min battery state of charge in %

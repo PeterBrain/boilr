@@ -20,7 +20,7 @@ try:
 except RuntimeError as re:
     logger.error("While importing RPi.GPIO! This is probably because you are not executing this script on a Raspberry Pi or you need elevated privileges.")
 except Exception as e:
-    logger.error("Unexpected: Something went wrong")
+    logger.error("Unexpected: Something went wrong while importing Raspberry GPIO module")
 else:
     def gpio_mode(channel, mode: str):
         logger.debug("Define gpio channel {0} and assign mode '{1}'".format(channel, mode))

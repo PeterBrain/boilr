@@ -4,7 +4,7 @@ Water boiler automation with a Fronius pv inverter on a Raspberry Pi.
 
 The goal was to use the overproduction of the PV system and increase the self consumption during daytime by heating water. By doing that, you decrease the amount of energy supplied to the grid, but also reduce consumption of pellets, oil or other fuel for heating.
 
-That's the theory. But what about special cases like an already running heater? Or taking away power generated from the pv and you have to use power from the grid to use the stove?
+That's the basic idea of this project. But what about special cases like an already running heater? Or taking away power generated from the pv and you have to use power from the grid to use the stove?
 I don't know, I don't care. Just wanted to do this in my spare time. Otherwise I would have wasted the time invested in this project by watching Netflix or Youtube.
 
 ![sufficiency over one day](./docs/sufficiency.jpg)
@@ -21,6 +21,10 @@ If you are not comfortable with the electrical part, call an electrician, becaus
 - Postman request collection: [Postman Collection - Fronius Solar API V1](https://www.getpostman.com/collections/27c663306206d7fbf502)
 
 ## Setup
+
+### Containerised (recommended)
+
+### cli
 
 1. Install python3
    - `sudo apt install python3 python3-venv`
@@ -121,15 +125,11 @@ You can judge me for that second schuko socket, because I messed up and didn't t
 
 ## Cost analysis
 
-Well, let's just asume there is a working product for this scenario out there that costs about 200-400€ without installation (I actually don't know if there is one).
+It took me three days to each six hours, to get the software up and running (3days x 6h = 18h). PayScale rates the average salary for an software engineer at 15.50€ per hour in Austria. Let me just do the math real quick (24hours * 15.50€/hour = 279€). Just shy of 300€ for a simple program. BTW, i am just a beginner in python.
 
-For me it took three days to each six hours, to get the software up and running (3days x 6h = 18h). PayScale rates the average salary for an software engineer at 15.50€ per hour in Austria. Let me just do the math real quick (24hours * 15.50€/hour = 279€). Just shy of 300€ for a simple program. BTW, i am just a beginner in python.
+Now for the electrical installation part. An electrician gets 22.30€ per hour (rate also from Payscale for Austria). I am not that routined like a real electrician, but I managed to get it done in two hours. Quic mafs: (2hours * 22.30€/hour = 44.60€). With a little bit of rounding, we settle at 50€. My calculation is without all the extra stuff we would have to pay for the electrician, because that is the salary he would get for this job, and not what we would pay for it. From experience it would cost about 50-80€ per hour (without material)!
 
-Now for the installation part. An electrician gets 22.30€ per hour (rate also from Payscale for Austria). I am not that routined like a real electrician, but I managed to get it done in two hours. Quic mafs: (2hours * 22.30€/hour = 44.60€). With a little bit of rounding, we settle at 50€. My calculation is without all the extra stuff we would have to pay for the electrician, because that is the salary he would get for this job from his boss, and not what we would pay for it. From experience it would cost about 50-80€ per hour (without material)!
-
-So, 300€ for the software and 50€ for the electical installation? Kind of, but without material costs and without actual costs we would have to pay. So my previous three paragraphs are pretty useless, because we can't compare salary of an average software engineer or electrician to the amount on the receipt we would have to pay. I plain words: I wasted your time (and my time by writing this).
-
-At least I get to say: "Hey mum, look what I did"
+So, 300€ for the software and 50€ for the electical installation? Kind of, but with very optimistic calculated installation costs.
 
 ### TL; DR
 
@@ -137,23 +137,4 @@ Heating water with not used power from the pv. That's it, cost analysis is just 
 
 ## Weaknesses
 
-This current design has a major drawback: Unlike Ohmpilot, a comparable product with a much higher efficiency thanks to PWM, my installation has only two states. It's either on (with full power to the heating coil), or off. This efficiency is lost on days where pv production isn't just enough to provide the current consumption of the house plus heating water.
-
-## TODO
-
-### Required
-
-- installer (mkdir for log and pid; install requirements)
-- tests (obvious)
-- store response (file)
-
-### Optional
-
-- daemon
-  - working directory (auto install - elevated privileges)
-  - run chrooted
-  - reload config
-- logrotate
-- containerize
-- api or publish/subscribe (mqtt) interface
-  - home-assistant
+This current design has a major drawback: Unlike Ohmpilot, a comparable product from Fronius with a much higher efficiency thanks to PWM, my installation has only two states. It's either on (with full power to the heating coil), or off. This most efficiency here is lost on days where pv production barely isn't enough to provide the current consumption of the house plus heating water.
