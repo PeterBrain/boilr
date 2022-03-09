@@ -1,7 +1,7 @@
-import boilr.logger as logg
 import logging
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 def gpio_mode(channel, mode: str):
     return False

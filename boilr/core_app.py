@@ -1,4 +1,3 @@
-import boilr.logger as logg
 import boilr.config as config
 import boilr.daemon as daemon
 import boilr.helpers as helpers
@@ -12,6 +11,7 @@ import statistics
 from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 class Boilr:
     def __init__(self, status=None, status_prev=None, pload: [float]=None, ppv: [float]=None):

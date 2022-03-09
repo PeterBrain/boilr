@@ -3,6 +3,7 @@ import logging
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 def date_checker(active_date_range):
     logger.debug("Checking date")

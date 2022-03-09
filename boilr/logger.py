@@ -13,7 +13,7 @@ file_formatter = logging.Formatter(fmt='[%(asctime)s] %(levelname)s [%(name)s.%(
 file_handler.setFormatter(file_formatter)
 
 console_handler = logging.StreamHandler() #sys.stdout
-console_handler.setLevel(logging.INFO)
+console_handler.setLevel(logging.DEBUG)
 console_formatter = logging.Formatter(fmt='[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s', datefmt=date_fmt, style='%') #'%(levelname)s -- %(message)s'
 console_handler.setFormatter(console_formatter)
 

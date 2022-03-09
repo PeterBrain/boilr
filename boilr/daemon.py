@@ -12,6 +12,7 @@ import daemon
 from daemon import pidfile
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 class MainCtrl:
     def __init__(self, thread_continue=None, verbose=None, manual=None):
@@ -135,7 +136,7 @@ def daemon_manual(args):
 daemon = daemon.DaemonContext(
         files_preserve=[
             logg.file_handler.stream,
-            logg.console_handler.stream
+            logg.console_handler.stream,
         ],
         chroot_directory=config.chroot_dir,
         working_directory=config.working_directory,
