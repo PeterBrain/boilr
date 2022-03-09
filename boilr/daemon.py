@@ -12,7 +12,6 @@ import daemon
 from daemon import pidfile
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 class MainCtrl:
     def __init__(self, thread_continue=None, verbose=None, manual=None):
@@ -28,6 +27,9 @@ def main_thread_stop(signum=None, frame=None):
 
 
 def main_thread(args, mainctrl):
+    if hasattr(args, 'verbose'):
+        mainctrl.verbose = args.verbose
+
     if hasattr(args, 'manual'):
         mainctrl.manual = True
         core_app.manual_override(args.manual[0])
@@ -41,7 +43,7 @@ def main_thread(args, mainctrl):
             time.sleep(config.interval)
     except KeyboardInterrupt as ke:
         if mainctrl.verbose:
-            logger.warning("Interrupting...")
+            logger.warning("Interrupting... {0}".format(str(ke)))
     except Exception as e:
         if mainctrl.verbose:
             logger.error("Exception: {0}".format(str(e)))
@@ -134,7 +136,7 @@ def daemon_manual(args):
 
 
 daemon = daemon.DaemonContext(
-        files_preserve=[
+        files_preserve=[ # preserve logging handler
             logg.file_handler.stream,
             logg.console_handler.stream,
         ],

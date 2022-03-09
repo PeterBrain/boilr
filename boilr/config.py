@@ -3,19 +3,18 @@ import json
 import yaml
 import logging
 
+#logger = logging.getLogger(__name__)
+
 #with open("config.json", "r") as json_file:
 #    user_config = json.safe_load(json_file)
 
-with open("../config.yaml", "r") as yaml_file:
+with open("config.yaml", "r") as yaml_file:
     user_config = yaml.safe_load(yaml_file)
     #logger.debug("Parsed configuration file: {0}".format(yaml_file.name))
 
 app_config = user_config["boilr"] or []
 rpi_config = user_config["rpi"] or []
 rest_config = user_config["endpoint"] or []
-
-#for item in user_config:
-#  print(item)
 
 prog_name = "boilr" # program name
 
@@ -44,6 +43,8 @@ working_directory = "/var/log/" + prog_name #"/var/lib/boilr/"
 logpath = os.path.join(working_directory, prog_name + ".log") #"/var/log/boilr/boilr.log"
 pidpath = os.path.join(working_directory, prog_name + ".pid") #"/var/run/boilr.pid"
 chroot_dir = None #working_directory
+logging_date_format = '%Y-%m-%dT%H:%M:%S'
+logging_format = '[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s'
 
 #user_config.close()
 

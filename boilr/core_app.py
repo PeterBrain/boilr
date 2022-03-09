@@ -1,6 +1,6 @@
 import boilr.config as config
 import boilr.daemon as daemon
-import boilr.helpers as helpers
+import boilr.helper as helper
 import boilr.rpi_gpio as rpi_gpio
 
 import sys, os
@@ -11,7 +11,6 @@ import statistics
 from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 class Boilr:
     def __init__(self, status=None, status_prev=None, pload: [float]=None, ppv: [float]=None):
@@ -37,28 +36,19 @@ boilr = Boilr()
 
 def run():
     ## check date and time range
-    date_check = helpers.date_checker(config.active_date_range)
-    if not date_check[0]:
-        boilr.date_check = False
-    else:
-        boilr.date_check = True
+    (boilr.date_check, date_check_msg) = helper.date_checker(config.active_date_range)
+    (boilr.time_check, time_check_msg) = helper.time_checker(config.active_time_range)
 
-    time_check = helpers.time_checker(config.active_time_range)
-    if not time_check[0]:
-        boilr.time_check = False
-    else:
-        boilr.time_check = True
-
-    ## chec if unchanged
     if not boilr.date_check or not boilr.time_check:
+        ## check if unchanged
         if boilr.date_check_prev != boilr.date_check:
-            logger.info(date_check[1])
+            logger.info(date_check_msg)
             boilr.date_check_prev = boilr.date_check
             if not boilr.date_check:
                 rpi_gpio.cleanup()
 
         if boilr.time_check_prev != boilr.time_check:
-            logger.info(time_check[1])
+            logger.info(time_check_msg)
             boilr.time_check_prev = boilr.time_check
             if not boilr.time_check:
                 rpi_gpio.cleanup()
@@ -67,21 +57,21 @@ def run():
     else:
         pass
 
-    logger.debug("Gathering information")
-    inverter_url = config.scheme + config.ip
-
     try:
+        inverter_url = config.scheme + config.ip
+        logger.debug("Gathering information from endpoint at: {0}".format(inverter_url))
+
         response_powerflow = requests.get(inverter_url + config.api + config.powerflow, timeout=config.request_timeout)
     except requests.exceptions.ConnectionError as e: # network problem
-        logger.warning("Connection error")
+        logger.warning("Connection error: {0}".format(str(e)))
     except requests.exceptions.Timeout as e:
-        logger.warning("Request timeout")
+        logger.warning("Request timeout: {0}".format(str(e)))
     except requests.exceptions.TooManyRedirects as e:
-        logger.warning("Too many redirects")
+        logger.warning("Too many redirects: {0}".format(str(e)))
     except requests.exceptions.RequestException as e:
-        logger.warning("There was an error with the request")
+        logger.warning("There was an error with the request: {0}".format(str(e)))
     except Exception as e:
-        logger.error("Unrecoverable error in request")
+        logger.error("Unrecoverable error in request: {0}".format(str(e)))
         daemon.daemon_stop()
     else:
         powerflow_site = response_powerflow.json()['Body']['Data']['Site']
