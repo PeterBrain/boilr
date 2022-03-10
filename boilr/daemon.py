@@ -40,7 +40,7 @@ def main_thread(args, mainctrl):
                 logger.debug("Continuing...")
 
             core_app.run()
-            time.sleep(config.interval)
+            time.sleep(config.SystemConfig.interval)
     except KeyboardInterrupt as ke:
         if mainctrl.verbose:
             logger.warning("Interrupting... {0}".format(str(ke)))
@@ -62,14 +62,14 @@ def daemon_start(args=None):
         mainctrl.verbose = args.verbose
 
     if mainctrl.verbose:
-        logger.info("Starting {0} with ARGS: {1}".format(config.prog_name, args))
+        logger.info("Starting {0} with ARGS: {1}".format(config.SystemConfig.prog_name, args))
     else:
-        logger.info("Starting {0}...".format(config.prog_name))
+        logger.info("Starting {0}...".format(config.SystemConfig.prog_name))
 
-    if os.path.exists(config.pidpath):
-        msg = "{0} is already running".format(config.prog_name)
+    if os.path.exists(config.SystemConfig.pidpath):
+        msg = "{0} is already running".format(config.SystemConfig.prog_name)
         print(msg)
-        logger.debug(msg + " (according to {0})".format(config.pidpath))
+        logger.debug(msg + " (according to {0})".format(config.SystemConfig.pidpath))
         sys.exit(1)
     else:
         with daemon:
@@ -81,56 +81,56 @@ def daemon_stop(args=None):
         mainctrl.verbose = args.verbose
 
     if mainctrl.verbose:
-        logger.info("Stopping {0} with ARGS: {1}".format(config.prog_name, args))
+        logger.info("Stopping {0} with ARGS: {1}".format(config.SystemConfig.prog_name, args))
     else:
-        logger.info("Stopping {0}...".format(config.prog_name))
+        logger.info("Stopping {0}...".format(config.SystemConfig.prog_name))
 
-    if os.path.exists(config.pidpath):
-        with open(config.pidpath) as pid:
+    if os.path.exists(config.SystemConfig.pidpath):
+        with open(config.SystemConfig.pidpath) as pid:
             try:
                 os.kill(int(pid.readline()), signal.SIGINT)
-                while os.path.exists(config.pidpath):
-                    time.sleep(config.interval)
+                while os.path.exists(config.SystemConfig.pidpath):
+                    time.sleep(config.SystemConfig.interval)
             except ProcessLookupError as ple:
-                os.remove(config.pidpath)
+                os.remove(config.SystemConfig.pidpath)
                 logger.error("ProcessLookupError: {0}".format(ple))
                 return False
             except Exception as e:
                 logger.error("Exception: {0}".format(e))
                 return False
     else:
-        logger.error("Process isn't running (according to the absence of {0}).".format(config.pidpath))
+        logger.error("Process isn't running (according to the absence of {0}).".format(config.SystemConfig.pidpath))
 
     return True
 
 
 def daemon_restart(args):
-    logger.info("Restarting {0}...".format(config.prog_name))
-    logger.debug("Waiting for {0} to stop".format(config.prog_name))
+    logger.info("Restarting {0}...".format(config.SystemConfig.prog_name))
+    logger.debug("Waiting for {0} to stop".format(config.SystemConfig.prog_name))
     if daemon_stop():
         daemon_start(args)
 
 
 def daemon_debug(args):
-    logger.info("Running {0} in debug mode".format(config.prog_name))
+    logger.info("Running {0} in debug mode".format(config.SystemConfig.prog_name))
     main_thread(args, mainctrl)
 
 
 def daemon_status(args):
-    logger.debug("{0} Status {1}".format(config.prog_name, args))
+    logger.debug("{0} Status {1}".format(config.SystemConfig.prog_name, args))
 
-    if os.path.exists(config.pidpath):
-        msg = "{0} is running".format(config.prog_name)
+    if os.path.exists(config.SystemConfig.pidpath):
+        msg = "{0} is running".format(config.SystemConfig.prog_name)
         print(msg)
         logger.debug(msg)
     else:
-        msg = "{0} is not running".format(config.prog_name)
+        msg = "{0} is not running".format(config.SystemConfig.prog_name)
         print(msg)
         logger.debug(msg)
 
 
 def daemon_manual(args):
-    logger.debug("{0} Manual mode: {1}".format(config.prog_name, args.manual))
+    logger.debug("{0} Manual mode: {1}".format(config.SystemConfig.prog_name, args.manual))
     mainctrl.thread_continue = False
     main_thread(args, mainctrl)
 
@@ -140,10 +140,10 @@ daemon = daemon.DaemonContext(
             logg.file_handler.stream,
             logg.console_handler.stream,
         ],
-        chroot_directory=config.chroot_dir,
-        working_directory=config.working_directory,
+        chroot_directory=config.SystemConfig.chroot_dir,
+        working_directory=config.SystemConfig.working_directory,
         umask=0o002,
-        pidfile=daemon.pidfile.PIDLockFile(config.pidpath),
+        pidfile=daemon.pidfile.PIDLockFile(config.SystemConfig.pidpath),
         detach_process=None,
         signal_map={
             signal.SIGTERM: main_thread_stop,
@@ -163,7 +163,7 @@ daemon = daemon.DaemonContext(
     )
 
 parser = argparse.ArgumentParser(
-        prog=config.prog_name,
+        prog=config.SystemConfig.prog_name,
         description='Water boiler automation with a Fronius pv inverter on a Raspberry Pi.',
         epilog='Additional hardware required. Please check: https://github.com/PeterBrain/boilr'
     )

@@ -6,14 +6,14 @@ import logging
 logger = logging.getLogger() # root logger
 logger.setLevel(logging.DEBUG)
 
-file_handler = logging.FileHandler(config.logpath)
+file_handler = logging.FileHandler(config.SystemConfig.logpath)
 file_handler.setLevel(logging.INFO)
-file_formatter = logging.Formatter(fmt=config.logging_format, datefmt=config.logging_date_format, style='%')
+file_formatter = logging.Formatter(fmt=config.SystemConfig.logging_format, datefmt=config.SystemConfig.logging_date_format, style='%')
 file_handler.setFormatter(file_formatter)
 
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.DEBUG)
-console_formatter = logging.Formatter(fmt=config.logging_format, datefmt=config.logging_date_format, style='%')
+console_formatter = logging.Formatter(fmt=config.SystemConfig.logging_format, datefmt=config.SystemConfig.logging_date_format, style='%')
 console_handler.setFormatter(console_formatter)
 
 logger.addHandler(file_handler) # log to file
