@@ -4,7 +4,7 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-def date_checker(active_date_range):
+def date_check(active_date_range):
     logger.debug("Checking date")
 
     current_date = datetime.now()
@@ -28,7 +28,7 @@ def date_checker(active_date_range):
             return(False, msg)
 
 
-def time_checker(active_time_range):
+def time_check(active_time_range):
     logger.debug("Checking time")
 
     current_time = datetime.now().time()

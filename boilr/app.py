@@ -3,8 +3,6 @@ import boilr.daemon as daemon
 import boilr.helper as helper
 import boilr.rpi_gpio as rpi_gpio
 
-import sys, os
-import time
 import logging
 import requests
 import statistics
@@ -30,14 +28,13 @@ class Boilr:
         self.status = (state, datetime.now())
         logger.debug("Status updated: {0}".format(state))
 
-
 boilr = Boilr()
 
 
 def run():
     ## check date and time range
-    (boilr.date_check, date_check_msg) = helper.date_checker(config.SystemConfig.active_date_range)
-    (boilr.time_check, time_check_msg) = helper.time_checker(config.SystemConfig.active_time_range)
+    (boilr.date_check, date_check_msg) = helper.date_check(config.SystemConfig.active_date_range)
+    (boilr.time_check, time_check_msg) = helper.time_check(config.SystemConfig.active_time_range)
 
     if not boilr.date_check or not boilr.time_check:
         ## check if unchanged
@@ -61,7 +58,10 @@ def run():
         inverter_url = config.EndpointConfig.scheme + config.EndpointConfig.ip
         logger.debug("Gathering information from endpoint at: {0}".format(inverter_url))
 
-        response_powerflow = requests.get(inverter_url + config.EndpointConfig.api + config.EndpointConfig.powerflow, timeout=config.EndpointConfig.request_timeout)
+        response_powerflow = requests.get(
+                inverter_url + config.EndpointConfig.api + config.EndpointConfig.powerflow,
+                timeout=config.EndpointConfig.request_timeout
+            )
     except requests.exceptions.ConnectionError as e: # network problem
         logger.warning("Connection error: {0}".format(str(e)))
     except requests.exceptions.Timeout as e:

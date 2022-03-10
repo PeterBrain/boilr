@@ -58,6 +58,5 @@ else:
         GPIO.cleanup()
         return True
 
-
 finally:
     pass

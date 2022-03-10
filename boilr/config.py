@@ -8,8 +8,8 @@ class SystemConfig():
     prog_name = "boilr" # program name
     working_directory = "/var/log/" + prog_name #"/var/lib/boilr/"
     logpath = os.path.join(working_directory, prog_name + ".log") #"/var/log/boilr/boilr.log"
-    pidpath = os.path.join(working_directory, prog_name + ".pid") #"/var/run/boilr.pid"
-    chroot_dir = None # working_directory
+    pidpath = os.path.join("/var/run/", prog_name + ".pid") #"/var/run/boilr.pid"
+    chroot_dir = None
     logging_date_format = '%Y-%m-%dT%H:%M:%S'
     logging_format = '[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s'
     config_file = "../config.yaml"
@@ -33,6 +33,7 @@ class EndpointConfig():
     ip = "10.0.10.90" # ip address of the inverter
     api = "/solar_api/v1" # api version (inverter specific; check with this URI: http://<ip-address>/solar_api/GetAPIVersion.cgi)
     powerflow = "/GetPowerFlowRealtimeData.fcgi" # resource
+
 
 try:
     with open(SystemConfig.config_file, "r") as yaml_file:
