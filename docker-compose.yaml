@@ -1,10 +1,12 @@
+---
 version: '3'
+
 services:
   boilr:
     container_name: boilr
     build: .
-    #volumes:
-    #  - /config:/config
+    volumes:
+      - ./config.yaml:/config.yaml
     restart: unless-stopped
     privileged: true
     networks:

@@ -1,51 +1,57 @@
-import os, sys
-import json
+import os
 import yaml
 import logging
 
-#logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
-#with open("config.json", "r") as json_file:
-#    user_config = json.safe_load(json_file)
+try:
+    with open("../config.yaml", "r") as yaml_file:
+        user_config = yaml.safe_load(yaml_file)
+        logger.debug("Parsed configuration file: {0}".format(yaml_file.name))
 
-with open("config.yaml", "r") as yaml_file:
-    user_config = yaml.safe_load(yaml_file)
-    #logger.debug("Parsed configuration file: {0}".format(yaml_file.name))
+except FileNotFoundError as e:
+    logger.error("File not found: {0}".format(str(e)))
+    #logger.info("Preceeding with defaults")
 
-app_config = user_config["boilr"] or []
-rpi_config = user_config["rpi"] or []
-rest_config = user_config["endpoint"] or []
+except Exception as e:
+    logger.error("Unrecoverable error: {0}".format(str(e)))
+    #logger.info("Preceeding with defaults")
 
-prog_name = "boilr" # program name
+else:
+    logger.debug("Applying configuration")
 
-rpi_channel_relay_out = rpi_config['rpi_channel_relay_out'] or 17 # board number 11
-rpi_channel_relay_in = rpi_config['rpi_channel_relay_in'] or 27 # board number 13
+    app_config = user_config["boilr"] or []
+    rpi_config = user_config["rpi"] or []
+    rest_config = user_config["endpoint"] or []
 
-interval = app_config['interval'] or 10 # check fronius api every x seconds
-start_timeout = app_config['start_timeout'] or 2 # min time between switching off and on again in minutes
+    rpi_channel_relay_out = rpi_config['rpi_channel_relay_out'] or 17 # board number 11
+    rpi_channel_relay_in = rpi_config['rpi_channel_relay_in'] or 27 # board number 13
 
-moving_median_list_size = app_config['moving_median_list_size'] or 5 # size of the array for past request values
-charge_threshold = app_config['charge_threshold'] or 85 # min battery state of charge in %
-ppv_tolerance = app_config['ppv_tolerance'] or 100 # tolerance pv production in W
+    interval = app_config['interval'] or 10 # check fronius api every x seconds
+    start_timeout = app_config['start_timeout'] or 120 # min time between contactor state change in seconds
 
-heater_power = app_config['heater_power'] or 2600 # power of the heating element in W (power availability) (2550W in datasheet)
+    moving_median_list_size = app_config['moving_median_list_size'] or 5 # size of the array for past request values
+    charge_threshold = app_config['charge_threshold'] or 85 # min battery state of charge in %
+    ppv_tolerance = app_config['ppv_tolerance'] or 100 # tolerance pv production in W
 
-active_date_range = app_config['active_date_range'] or ["01-01", "31-12"] # may - oct (day-month) ([start, end])
-active_time_range = app_config['active_time_range'] or ["00:00", "23:59"] # after charging the battery; before discharging the battery (hour:minute) 10:00 - 17:00 ([start, end])
+    heater_power = app_config['heater_power'] or 2600 # power of the heating element in W (power availability) (2550W in datasheet)
 
-request_timeout = rest_config['request_timeout'] or 5 # timeout for requests in seconds
-scheme = rest_config['scheme'] or "http://"
-ip = rest_config['ip'] or "10.0.10.90" # ip address of the inverter
-api = rest_config['api'] or "/solar_api/v1" # api version (inverter specific; check with this URI: http://<ip-address>/solar_api/GetAPIVersion.cgi)
-powerflow = rest_config['powerflow'] or "/GetPowerFlowRealtimeData.fcgi" # resource
+    active_date_range = app_config['active_date_range'] or ["01-01", "31-12"] # may - oct (day-month) ([start, end])
+    active_time_range = app_config['active_time_range'] or ["00:00", "23:59"] # after charging the battery; before discharging the battery (hour:minute) 10:00 - 17:00 ([start, end])
 
-working_directory = "/var/log/" + prog_name #"/var/lib/boilr/"
-logpath = os.path.join(working_directory, prog_name + ".log") #"/var/log/boilr/boilr.log"
-pidpath = os.path.join(working_directory, prog_name + ".pid") #"/var/run/boilr.pid"
-chroot_dir = None #working_directory
-logging_date_format = '%Y-%m-%dT%H:%M:%S'
-logging_format = '[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s'
+    request_timeout = rest_config['request_timeout'] or 5 # timeout for requests in seconds
+    scheme = rest_config['scheme'] or "http://" # scheme
+    ip = rest_config['ip'] or "10.0.10.90" # ip address of the inverter
+    api = rest_config['api'] or "/solar_api/v1" # api version (inverter specific; check with this URI: http://<ip-address>/solar_api/GetAPIVersion.cgi)
+    powerflow = rest_config['powerflow'] or "/GetPowerFlowRealtimeData.fcgi" # resource
 
-#user_config.close()
+    #logger.debug("Finished applying configuration")
 
-#logger.debug("Finished applying configuration")
+finally:
+    prog_name = "boilr" # program name
+    working_directory = "/var/log/" + prog_name #"/var/lib/boilr/"
+    logpath = os.path.join(working_directory, prog_name + ".log") #"/var/log/boilr/boilr.log"
+    pidpath = os.path.join(working_directory, prog_name + ".pid") #"/var/run/boilr.pid"
+    chroot_dir = None # working_directory
+    logging_date_format = '%Y-%m-%dT%H:%M:%S'
+    logging_format = '[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s'

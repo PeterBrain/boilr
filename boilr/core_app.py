@@ -121,7 +121,7 @@ def run():
                 boilr.update_status(False)
 
             ## check start timeout (instant off, delayed starting)
-            if boilr.status_prev[0] or not boilr.status_prev[0] and boilr.status_prev[1] < datetime.now() - timedelta(minutes=config.start_timeout):
+            if boilr.status_prev[0] or not boilr.status_prev[0] and boilr.status_prev[1] < datetime.now() - timedelta(seconds=config.start_timeout):
                 ## check if status unchanged
                 if boilr.status_prev[0] != boilr.status[0]:
                     logger.debug("Conditions {0} met: contactor {1}".format("not" if not boilr.status[0] else "", "closed" if boilr.status[0] else "open"))
