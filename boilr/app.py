@@ -23,7 +23,6 @@ class Boilr:
         self.pload_median = 0
         self.ppv_median = 0
 
-
     def update_status(self, state):
         self.status = (state, datetime.now())
         logger.debug("Status updated: {0}".format(state))
