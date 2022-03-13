@@ -1,6 +1,7 @@
 import boilr.logger as logg
 import boilr.config as config
 import boilr.core as core
+import boilr.app as app
 
 import sys, os
 import time
@@ -86,6 +87,7 @@ def daemon_restart(args):
     logger.debug("Waiting for {0} to stop".format(config.SystemConfig.prog_name))
 
     if daemon_stop():
+        logger.debug("{0} stopped. Attempting to start again".format(config.SystemConfig.prog_name))
         daemon_start(args)
 
 
@@ -109,7 +111,16 @@ def daemon_status(args):
         logger.debug("{0} Status: {1}".format(config.SystemConfig.prog_name, args))
 
     if os.path.exists(config.SystemConfig.pidpath):
+        boilr = app.boilr
+        (status, status_timestamp) = boilr.status
+        (status_prev, status_timestamp_prev) = boilr.status
+
         msg = "{0} is running".format(config.SystemConfig.prog_name)
+        msg += "\nContactor status: {0}".format(status)
+        msg += "\nContactor last changed: {0}".format(status_timestamp)
+        msg += "\nContactor {0} for {1} seconds, Previously {2}".format("closed" if status else "open", round((status_timestamp - status_timestamp_prev).total_seconds()), status_prev)
+        msg += "\nPower load: {0}, Median: {1}".format(boilr.pload, boilr.pload_median)
+        msg += "\nPower pv: {0}, Median: {1}".format(boilr.ppv, boilr.ppv_median)
         print(msg)
         logger.debug(msg)
     else:
