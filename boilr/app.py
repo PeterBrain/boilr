@@ -31,11 +31,10 @@ boilr = Boilr()
 
 
 def run():
-    ## check date and time range
+    ## check date range
     (boilr.date_check, date_check_msg) = helper.date_check(config.SystemConfig.active_date_range)
-    (boilr.time_check, time_check_msg) = helper.time_check(config.SystemConfig.active_time_range)
 
-    if not boilr.date_check or not boilr.time_check:
+    if not boilr.date_check:
         ## check if unchanged
         if boilr.date_check_prev != boilr.date_check:
             logger.info(date_check_msg)
@@ -43,15 +42,22 @@ def run():
             if not boilr.date_check:
                 rpi_gpio.cleanup()
 
-        if boilr.time_check_prev != boilr.time_check:
-            logger.info(time_check_msg)
-            boilr.time_check_prev = boilr.time_check
-            if not boilr.time_check:
-                rpi_gpio.cleanup()
-
         return False
     else:
-        pass
+        ## check time range
+        (boilr.time_check, time_check_msg) = helper.time_check(config.SystemConfig.active_time_range)
+
+        if not boilr.time_check:
+            ## check if unchanged
+            if boilr.time_check_prev != boilr.time_check:
+                logger.info(time_check_msg)
+                boilr.time_check_prev = boilr.time_check
+                if not boilr.time_check:
+                    rpi_gpio.cleanup()
+
+            return False
+        else:
+            pass
 
     try:
         inverter_url = config.EndpointConfig.scheme + config.EndpointConfig.ip

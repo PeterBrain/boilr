@@ -11,9 +11,14 @@ from daemon import pidfile
 
 logger = logging.getLogger(__name__)
 
-def daemon_start(args=None):
-    if hasattr(args, 'verbose'):
+def is_verbose(args):
+    if hasattr(args, 'verbose') and getattr(args, 'verbose'):
         core.mainctrl.verbose = args.verbose
+        logg.console_handler.setLevel(logging.DEBUG)
+
+
+def daemon_start(args=None):
+    is_verbose(args)
 
     if core.mainctrl.verbose:
         logger.info("Starting {0} with ARGS: {1}".format(config.SystemConfig.prog_name, args))
@@ -31,8 +36,7 @@ def daemon_start(args=None):
 
 
 def daemon_stop(args=None):
-    if hasattr(args, 'verbose'):
-       core.mainctrl.verbose = args.verbose
+    is_verbose(args)
 
     if core.mainctrl.verbose:
         logger.info("Stopping {0} with ARGS: {1}".format(config.SystemConfig.prog_name, args))
@@ -42,9 +46,18 @@ def daemon_stop(args=None):
     if os.path.exists(config.SystemConfig.pidpath):
         with open(config.SystemConfig.pidpath) as pid:
             try:
+                core.stop_event.set()
                 os.kill(int(pid.readline()), signal.SIGINT)
+
+                wait="Stopping.."
                 while os.path.exists(config.SystemConfig.pidpath):
-                    time.sleep(config.SystemConfig.interval)
+                    if core.mainctrl.verbose:
+                        print(wait, sep='', end ='\r', flush=True)
+                        time.sleep(1)
+                        wait += "."
+
+                if core.mainctrl.verbose: print(wait + " OK")
+
             except ProcessLookupError as ple:
                 os.remove(config.SystemConfig.pidpath)
                 logger.error("ProcessLookupError: {0}".format(ple))
@@ -67,19 +80,33 @@ def daemon_stop(args=None):
 
 
 def daemon_restart(args):
+    is_verbose(args)
+
     logger.info("Restarting {0}...".format(config.SystemConfig.prog_name))
     logger.debug("Waiting for {0} to stop".format(config.SystemConfig.prog_name))
+
     if daemon_stop():
         daemon_start(args)
 
 
-def daemon_debug(args):
+def daemon_run(args):
+    logg.console_handler.setLevel(logging.WARN)
+    is_verbose(args)
+
+    #for handler in logg.logger.handlers:
+    #    print(handler)
+
     logger.info("Running {0} in debug mode".format(config.SystemConfig.prog_name))
     core.main_thread(args, core.mainctrl)
 
 
 def daemon_status(args):
-    logger.debug("{0} Status {1}".format(config.SystemConfig.prog_name, args))
+    is_verbose(args)
+
+    if core.mainctrl.verbose:
+        logger.info("{0} status with ARGS: {1}".format(config.SystemConfig.prog_name, args))
+    else:
+        logger.debug("{0} Status: {1}".format(config.SystemConfig.prog_name, args))
 
     if os.path.exists(config.SystemConfig.pidpath):
         msg = "{0} is running".format(config.SystemConfig.prog_name)
@@ -92,6 +119,8 @@ def daemon_status(args):
 
 
 def daemon_manual(args):
+    is_verbose(args)
+
     logger.debug("{0} Manual mode: {1}".format(config.SystemConfig.prog_name, args.manual))
     core.mainctrl.thread_continue = False
     core.main_thread(args, core.mainctrl)

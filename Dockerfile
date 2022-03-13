@@ -8,4 +8,4 @@ RUN touch /var/log/boilr/boilr.log
 
 RUN pip3 install -r requirements.txt
 
-CMD [ "python3", "-m" , "boilr", "-v", "debug"]
+CMD [ "python3", "-m" , "boilr", "-v", "run"]

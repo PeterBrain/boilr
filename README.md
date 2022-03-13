@@ -60,13 +60,13 @@ python3 -m boilr stop
 Others:
 
 ```bash
-python3 -m boilr [-h] [-v] {start,stop,status,restart,debug,manual {0,1}}
+python3 -m boilr [-h] [-v] {start,stop,status,restart,run,manual {0,1}}
 ```
 
 Complete guide (boilr -h):
 
 ```bash
-usage: boilr [-h] [-v] {start,stop,status,restart,debug,manual} ...
+usage: boilr [-h] [-v] {start,stop,status,restart,run,manual} ...
 
 Water boiler automation with a Fronius pv inverter on a Raspberry Pi.
 
@@ -80,7 +80,7 @@ commands:
     stop                Stops boilr daemon
     status              Show the status of boilr daemon
     restart             Restarts boilr daemon
-    debug               Starts boilr daemon in debug mode
+    run                 Starts boilr in command line
     manual              Manually override gpio channel (contactor)
 
 Additional hardware required. Please check:
