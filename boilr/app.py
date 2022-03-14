@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 import boilr.config as config
 import boilr.daemon as daemon
 import boilr.helper as helper
@@ -80,10 +81,10 @@ def run():
         daemon.daemon_stop()
     else:
         powerflow_site = response_powerflow.json()['Body']['Data']['Site']
-        powerflow_pgrid = powerflow_site['P_Grid'] or 0 # + from grid, - to grid, null no meter enabled
-        powerflow_pakku = powerflow_site['P_Akku'] or 0 # + discharge, - charge, null not active
-        powerflow_ppv = powerflow_site['P_PV'] or 0 # + production, null inverter not running
-        powerflow_pload = powerflow_site['P_Load'] or 0 # - current load
+        powerflow_pgrid = powerflow_site['P_Grid'] or 0 # + -> from grid, - -> to grid, null -> no meter enabled
+        powerflow_pakku = powerflow_site['P_Akku'] or 0 # + -> discharge, - -> charge, null -> not active
+        powerflow_ppv = powerflow_site['P_PV'] or 0 # + -> production, null -> inverter not running
+        powerflow_pload = powerflow_site['P_Load'] or 0 # - -> current load
 
         logger.debug("Powerflow grid: {0} W".format(powerflow_pgrid))
         logger.debug("Powerflow akku: {0} W".format(powerflow_pakku))
@@ -153,16 +154,31 @@ def run():
         return True
 
 
+## manually override contactor status
 def manual_override(args):
-    if not rpi_gpio.gpio_mode(config.RpiConfig.rpi_channel_relay_out, "out") or not rpi_gpio.gpio_mode(config.RpiConfig.rpi_channel_relay_in, "in"):
-        logger.warning("Error while setting gpio mode")
+    try:
+        if not rpi_gpio.gpio_mode(config.RpiConfig.rpi_channel_relay_out, "out") or not rpi_gpio.gpio_mode(config.RpiConfig.rpi_channel_relay_in, "in"):
+            raise SystemError("GPIO mode failed")
+
+        if args in {0, 1}:
+            logger.debug("Manual override: contactor {0}".format("closed" if args == 1 else "open"))
+            logger.info("Status: {0} (manual)".format("active" if args == 1 else "inactive"))
+            if not rpi_gpio.output_relay(config.RpiConfig.rpi_channel_relay_out, True if args == 1 else False):
+                raise SystemError("GPIO channel failed")
+        else:
+            raise ValueError("Argument not in allowed set: {0}".format(str(args)))
+
+    except SystemError as se:
+        logger.error("Error while setting gpio: {0}".format(str(se)))
         return False
 
-    if args in {0, 1}:
-        logger.debug("Manual override: contactor {0}".format("closed" if args == 1 else "open"))
-        logger.info("Status: {0} (manual)".format("active" if args == 1 else "inactive"))
-        gpio_output = rpi_gpio.output_relay(config.RpiConfig.rpi_channel_relay_out, True if args == 1 else False)
-    else:
-        logger.warning("Manual override failed. Wrong argument: {0}".format(args))
+    except ValueError as ve:
+        logger.error("Value error: {0}".format(str(ve)))
+        return False
 
-    return True
+    except Exception as e:
+        logger.error("Error: {0}".format(str(e)))
+        return False
+
+    else:
+        return True

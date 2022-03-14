@@ -1,13 +1,14 @@
 import boilr.config as config
-import boilr.helper as helper
 
 import sys
 import logging
+from logging.handlers import RotatingFileHandler
 
 logger = logging.getLogger() # root logger
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.DEBUG) # root logging level
 
-file_handler = logging.FileHandler(config.SystemConfig.logpath)
+rotating_file_handler = RotatingFileHandler(config.SystemConfig.logpath, mode='a', maxBytes=2000, backupCount=10)
+file_handler = rotating_file_handler #logging.FileHandler(config.SystemConfig.logpath)
 file_handler.setLevel(logging.INFO)
 file_formatter = logging.Formatter(fmt=config.SystemConfig.logging_format, datefmt=config.SystemConfig.logging_date_format, style='%')
 file_handler.setFormatter(file_formatter)
@@ -18,7 +19,6 @@ console_formatter = logging.Formatter(fmt=config.SystemConfig.logging_format, da
 console_handler.setFormatter(console_formatter)
 
 logger.addHandler(file_handler) # log to file
-#if helper.is_docker():
 logger.addHandler(console_handler) # log to console
 
 logger.debug("Logging config applied")

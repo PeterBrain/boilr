@@ -95,9 +95,6 @@ def daemon_run(args):
     logg.console_handler.setLevel(logging.WARN)
     is_verbose(args)
 
-    #for handler in logg.logger.handlers:
-    #    print(handler)
-
     logger.info("Running {0} in debug mode".format(config.SystemConfig.prog_name))
     core.main_thread(args, core.mainctrl)
 
@@ -116,13 +113,14 @@ def daemon_status(args):
         (status_prev, status_timestamp_prev) = boilr.status
 
         msg = "{0} is running".format(config.SystemConfig.prog_name)
+        logger.debug(msg)
+
         msg += "\nContactor status: {0}".format(status)
         msg += "\nContactor last changed: {0}".format(status_timestamp)
         msg += "\nContactor {0} for {1} seconds, Previously {2}".format("closed" if status else "open", round((status_timestamp - status_timestamp_prev).total_seconds()), status_prev)
-        msg += "\nPower load: {0}, Median: {1}".format(boilr.pload, boilr.pload_median)
-        msg += "\nPower pv: {0}, Median: {1}".format(boilr.ppv, boilr.ppv_median)
+        msg += "\nPower load: {0} W, Median: {1} W".format(boilr.pload, boilr.pload_median)
+        msg += "\nPower pv: {0} W, Median: {1} W".format(boilr.ppv, boilr.ppv_median)
         print(msg)
-        logger.debug(msg)
     else:
         msg = "{0} is not running".format(config.SystemConfig.prog_name)
         print(msg)

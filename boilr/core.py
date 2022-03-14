@@ -7,6 +7,7 @@ import threading
 
 logger = logging.getLogger(__name__)
 stop_event = threading.Event()
+
 class MainCtrl:
     def __init__(self, thread_continue=None, verbose=None, manual=None):
         self.thread_continue = thread_continue or True
@@ -19,6 +20,7 @@ class MainCtrl:
 mainctrl = MainCtrl()
 
 
+## non blocking app thread
 def app_thread(stop_event):
     logger.debug("Starting app thread")
 
@@ -32,6 +34,7 @@ def app_thread(stop_event):
     logger.debug("Stopping app thread")
 
 
+## main thread
 def main_thread(args, mainctrl):
     if hasattr(args, 'manual'):
         mainctrl.manual = True
