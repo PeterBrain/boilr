@@ -2,13 +2,12 @@ import boilr.config as config
 
 import sys
 import logging
-from logging.handlers import RotatingFileHandler
+import logging.handlers
 
 logger = logging.getLogger() # root logger
 logger.setLevel(logging.DEBUG) # root logging level
 
-rotating_file_handler = RotatingFileHandler(config.SystemConfig.logpath, mode='a', maxBytes=2000, backupCount=10)
-file_handler = rotating_file_handler #logging.FileHandler(config.SystemConfig.logpath)
+file_handler = logging.handlers.TimedRotatingFileHandler(config.SystemConfig.logpath, when='W0', interval=1, backupCount=12)
 file_handler.setLevel(logging.INFO)
 file_formatter = logging.Formatter(fmt=config.SystemConfig.logging_format, datefmt=config.SystemConfig.logging_date_format, style='%')
 file_handler.setFormatter(file_formatter)
