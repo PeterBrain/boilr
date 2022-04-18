@@ -24,6 +24,15 @@ If you are not comfortable with the electrical part, call an electrician, becaus
 
 ### Containerised (recommended)
 
+1. Build image (on Raspberry Pi)
+   - `docker-compose build`
+1. Run app in container
+   - `docker-compose up -d`
+
+#### Notes
+
+In order to install and use Docker on a Raspberry Pi 1 Model B I had to set `sysctl vm.overcommit_memory=1` and restart after the installation.
+
 ### cli
 
 1. Install python3
@@ -98,8 +107,9 @@ python3 setup.py
 ### Software
 
 - Raspberry Pi with operating system (i use the 1B with a headless raspbian)
-- Python 3 (tested with 3.7)
+- Python 3 (tested with 3.9)
 - some python packages
+- Docker
 
 ### Hardware
 
@@ -131,10 +141,7 @@ Now for the electrical installation part. An electrician gets 22.30€ per hour 
 
 So, 300€ for the software and 50€ for the electical installation? Kind of, but with very optimistic calculated installation costs.
 
-### TL; DR
-
-Heating water with not used power from the pv. That's it, cost analysis is just blabla.
-
 ## Weaknesses
 
 This current design has a major drawback: Unlike Ohmpilot, a comparable product from Fronius with a much higher efficiency thanks to PWM, my installation has only two states. It's either on (with full power to the heating coil), or off. This most efficiency here is lost on days where pv production barely isn't enough to provide the current consumption of the house plus heating water.
+
