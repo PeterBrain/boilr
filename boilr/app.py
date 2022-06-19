@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class Boilr:
     def __init__(self, status=None, status_prev=None, pload: [float]=None, ppv: [float]=None):
         self.status = (status or False, datetime.now())
-        self.status_prev = (status_prev or True, datetime.now())
+        self.status_prev = (status_prev or False, datetime.now())
         self.date_check = True
         self.date_check_prev = True
         self.time_check = True
@@ -127,7 +127,9 @@ def run():
                 boilr.update_status(False)
 
             ## check start timeout (instant off, delayed starting)
-            if boilr.status_prev[0] or not boilr.status_prev[0] and boilr.status_prev[1] < datetime.now() - timedelta(seconds=config.SystemConfig.start_timeout):
+            ## previous true -> condition met (instant off)
+            ## previous false & timedelta between toggle -> condition met (delayed starting)
+            if boilr.status_prev[0] or (not boilr.status_prev[0] and boilr.status_prev[1] < datetime.now() - timedelta(seconds=config.SystemConfig.start_timeout)):
                 ## check if status unchanged
                 if boilr.status_prev[0] != boilr.status[0]:
                     logger.debug("Conditions {0} met: contactor {1}".format("not" if not boilr.status[0] else "", "closed" if boilr.status[0] else "open"))

@@ -30,7 +30,7 @@ class RpiConfig():
 class EndpointConfig():
     request_timeout = 5 # timeout for requests in seconds
     scheme = "http://" # scheme
-    ip = "10.0.10.90" # ip address of the inverter
+    ip = "example.local" # domain/ip address of the inverter
     api = "/solar_api/v1" # api version (inverter specific; check with this URI: http://<ip-address>/solar_api/GetAPIVersion.cgi)
     powerflow = "/GetPowerFlowRealtimeData.fcgi" # resource
 
