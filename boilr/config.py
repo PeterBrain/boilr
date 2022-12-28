@@ -29,6 +29,7 @@ class RpiConfig():
 
 class EndpointConfig():
     request_timeout = 5 # timeout for requests in seconds
+    max_retries = 3 # maximum retries for requests
     scheme = "http://" # scheme
     ip = "example.local" # domain/ip address of the inverter
     api = "/solar_api/v1" # api version (inverter specific; check with this URI: http://<ip-address>/solar_api/GetAPIVersion.cgi)
@@ -68,6 +69,7 @@ else:
     RpiConfig.rpi_channel_relay_in = rpi_config['rpi_channel_relay_in']
 
     EndpointConfig.request_timeout = rest_config['request_timeout']
+    EndpointConfig.max_retries = rest_config['max_retries']
     EndpointConfig.scheme = rest_config['scheme']
     EndpointConfig.ip = rest_config['ip']
     EndpointConfig.api = rest_config['api']
