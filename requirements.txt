@@ -4,7 +4,7 @@ docutils==0.18.1
 idna==3.3
 lockfile==0.12.2
 python-daemon==2.3.0
-requests==2.27.1
+requests==2.31.0
 RPi.GPIO==0.7.1
 urllib3==1.26.8
 pyyaml==6.0
