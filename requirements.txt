@@ -1,10 +1,10 @@
-certifi==2022.12.7
-chardet==4.0.0
-docutils==0.18.1
-idna==3.3
+certifi==2023.7.22
+chardet==5.2.0
+docutils==0.20.1
+idna==3.4
 lockfile==0.12.2
-python-daemon==2.3.0
+python-daemon==3.0.1
 requests==2.31.0
 RPi.GPIO==0.7.1
-urllib3==1.26.8
-pyyaml==6.0
+urllib3==2.0.4
+pyyaml==6.0.1
