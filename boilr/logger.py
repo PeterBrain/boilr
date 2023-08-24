@@ -1,8 +1,8 @@
-import boilr.config as config
-
 import sys
 import logging
 import logging.handlers
+
+import boilr.config as config
 
 logger = logging.getLogger() # root logger
 logger.setLevel(logging.DEBUG) # root logging level

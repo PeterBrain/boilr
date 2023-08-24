@@ -1,27 +1,29 @@
+import logging
+import threading
+
 import boilr.config as config
 import boilr.app as app
 import boilr.rpi_gpio as rpi_gpio
-
-import logging
-import threading
 
 logger = logging.getLogger(__name__)
 stop_event = threading.Event()
 
 class MainCtrl:
+    """Class controls"""
     def __init__(self, thread_continue=None, verbose=None, manual=None):
         self.thread_continue = thread_continue or True
         self.verbose = verbose or False
         self.manual = manual or False
 
-    def main_thread_stop(signum=None, frame=None):
+    def main_thread_stop(self, signum=None, frame=None):
+        """Function stopping main thread"""
         thread_continue = False
 
 mainctrl = MainCtrl()
 
 
-## non blocking app thread
 def app_thread(stop_event):
+    """Function non blocking app thread"""
     logger.debug("Starting app thread")
 
     while mainctrl.thread_continue and not stop_event.isSet():
@@ -34,8 +36,8 @@ def app_thread(stop_event):
     logger.debug("Stopping app thread")
 
 
-## main thread
 def main_thread(args, mainctrl):
+    """Function main thread"""
     if hasattr(args, 'manual'):
         mainctrl.manual = True
         app.manual_override(args.manual[0])
@@ -49,13 +51,13 @@ def main_thread(args, mainctrl):
         while thread.is_alive():
             thread.join() # wait for the thread to complete
 
-    except KeyboardInterrupt as ke:
+    except KeyboardInterrupt as keyboard_interrupt:
         if mainctrl.verbose:
-            logger.info("Interrupting... {0}".format(str(ke)))
+            logger.info("Interrupting... %s", keyboard_interrupt)
 
-    except Exception as e:
+    except Exception as e_general:
         if mainctrl.verbose:
-            logger.error("Exception: {0}".format(str(e)))
+            logger.error("Exception: %s", e_general)
 
     else:
         logger.debug("Stopping without errors")

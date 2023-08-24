@@ -1,7 +1,7 @@
+import argparse
+
 import boilr.config as config
 import boilr.daemon as daemon
-
-import argparse
 
 parser = argparse.ArgumentParser(
         prog=config.SystemConfig.prog_name,

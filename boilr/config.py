@@ -1,10 +1,11 @@
 import os
-import yaml
 import logging
+import yaml
 
 logger = logging.getLogger(__name__)
 
 class SystemConfig():
+    """Class system configuration"""
     prog_name = "boilr" # program name
     working_directory = "/var/log/" + prog_name #"/var/lib/boilr/"
     logpath = os.path.join(working_directory, prog_name + ".log") #"/var/log/boilr/boilr.log"
@@ -24,10 +25,12 @@ class SystemConfig():
     active_time_range = ["00:00", "23:59"] # after charging the battery; before discharging the battery (hour:minute) 10:00 - 17:00 ([start, end])
 
 class RpiConfig():
+    """Class GPIO configuration"""
     rpi_channel_relay_out = 17 # board number 11
     rpi_channel_relay_in = 27 # board number 13
 
 class EndpointConfig():
+    """Class endpoint configuration"""
     request_timeout = 5 # timeout for requests in seconds
     max_retries = 3 # maximum retries for requests
     scheme = "http://" # scheme
@@ -37,16 +40,16 @@ class EndpointConfig():
 
 
 try:
-    with open(SystemConfig.config_file, "r") as yaml_file:
+    with open(SystemConfig.config_file, "r", encoding="utf-8") as yaml_file:
         user_config = yaml.safe_load(yaml_file)
-        logger.debug("Parsed configuration file: {0}".format(yaml_file.name))
+        logger.debug("Parsed configuration file: %s", yaml_file.name)
 
-except FileNotFoundError as e:
-    logger.error("File not found: {0}".format(str(e)))
+except FileNotFoundError as file_not_found:
+    logger.error("File not found: %s", file_not_found)
     logger.info("Preceeding with defaults")
 
-except Exception as e:
-    logger.error("Unrecoverable error: {0}".format(str(e)))
+except Exception as e_general:
+    logger.error("Unrecoverable error: %s", e_general)
     logger.info("Preceeding with defaults")
 
 else:

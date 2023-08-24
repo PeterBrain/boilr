@@ -1,8 +1,3 @@
-import boilr.config as config
-import boilr.daemon as daemon
-import boilr.helper as helper
-import boilr.rpi_gpio as rpi_gpio
-
 import logging
 import statistics
 from datetime import datetime, timedelta
@@ -12,10 +7,21 @@ import requests
 from requests.adapters import HTTPAdapter
 from requests.exceptions import ConnectionError, Timeout, TooManyRedirects, RequestException
 
+import boilr.config as config
+import boilr.daemon as daemon
+import boilr.helper as helper
+import boilr.rpi_gpio as rpi_gpio
+
 logger = logging.getLogger(__name__)
 
 class Boilr:
-    def __init__(self, status=None, status_prev=None, pload: List[float]=None, ppv: List[float]=None):
+    """Class boilr status vars"""
+    def __init__(
+        self, status=None,
+        status_prev=None,
+        pload: List[float]=None,
+        ppv: List[float]=None
+    ):
         self.status = (status or False, datetime.now())
         self.status_prev = (status_prev or False, datetime.now())
         self.date_check = True
@@ -28,29 +34,32 @@ class Boilr:
         self.ppv_median = 0
 
     def update_status(self, state):
+        """Function update contactor status"""
         self.status = (state, datetime.now())
-        logger.debug("Status updated: {0}".format(state))
+        logger.debug("Status updated: %s", state)
         return True
 
     def update_medians(self, powerflow_pload, powerflow_ppv):
+        """Function median calculation"""
         self.pload.append(powerflow_pload)
         self.ppv.append(powerflow_ppv)
 
         try:
             self.pload_median = statistics.median(self.pload)
             self.ppv_median = statistics.median(self.ppv)
-        except Exception as e:
-            logger.error("Error in median calculation: {0}".format(str(e)))
+        except Exception as e_general:
+            logger.error("Error in median calculation: %s", e_general)
             return False
         else:
-            logger.debug("Median power ppv: {0} W".format(self.ppv_median))
-            logger.debug("Median power load: {0} W".format(self.pload_median))
+            logger.debug("Median power ppv: %s W", round(self.ppv_median, 2))
+            logger.debug("Median power load: %s W", round(self.pload_median, 2))
             return True
 
 boilr = Boilr()
 
 
 def run():
+    """Function run"""
     ## check date range
     (boilr.date_check, date_check_msg) = helper.date_check(config.SystemConfig.active_date_range)
 
@@ -82,7 +91,7 @@ def run():
             pass
 
     inverter_url = config.EndpointConfig.scheme + config.EndpointConfig.ip
-    logger.debug("Gathering information from endpoint at: {0}".format(inverter_url))
+    logger.debug("Gathering information from endpoint at: %s", inverter_url)
 
     # session object with retry functionality
     session = requests.Session()
@@ -95,24 +104,24 @@ def run():
                 inverter_url + config.EndpointConfig.api + config.EndpointConfig.powerflow,
                 timeout=config.EndpointConfig.request_timeout
             )
-    except (ConnectionError, Timeout, TooManyRedirects, RequestException) as e:
-        logger.warning("Error making request: {0}".format(str(e)))
+    except (ConnectionError, Timeout, TooManyRedirects, RequestException) as exception:
+        logger.warning("Error in request: %s", exception)
         boilr.update_medians(0, 0)
-    except Exception as e:
-        logger.error("Unrecoverable error in request: {0}".format(str(e)))
+    except Exception as e_general:
+        logger.error("Unrecoverable error in request: %s", e_general)
         boilr.update_medians(0, 0)
         daemon.daemon_stop()
     else:
         # check status code of the response
         if response_powerflow.status_code != 200:
-            logger.error("Request returned status code: {0}".format(response_powerflow.status_code))
+            logger.error("Request returned status code: %s", response_powerflow.status_code)
             boilr.update_medians(0, 0)
             return False
 
         try:
             powerflow_site = response_powerflow.json()['Body']['Data']['Site']
-        except Exception as e:
-            logger.error("Error parsing JSON response (powerflow site): {0}".format(str(e)))
+        except Exception as e_general:
+            logger.error("Error parsing JSON response (powerflow site): %s", e_general)
             return False
         else:
             powerflow_pgrid = powerflow_site['P_Grid'] or 0 # + -> from grid, - -> to grid, null -> no meter enabled
@@ -120,21 +129,21 @@ def run():
             powerflow_ppv = powerflow_site['P_PV'] or 0 # + -> production, null -> inverter not running
             powerflow_pload = powerflow_site['P_Load'] or 0 # - -> current load
 
-            logger.debug("Powerflow grid: {0} W".format(powerflow_pgrid))
-            logger.debug("Powerflow akku: {0} W".format(powerflow_pakku))
-            logger.debug("Powerflow ppv: {0} W".format(powerflow_ppv))
-            logger.debug("Powerflow load: {0} W".format(powerflow_pload))
+            logger.debug("Powerflow grid: %s W", round(powerflow_pgrid, 2))
+            logger.debug("Powerflow akku: %s W", round(powerflow_pakku, 2))
+            logger.debug("Powerflow ppv: %s W", round(powerflow_ppv, 2))
+            logger.debug("Powerflow load: %s W", round(powerflow_pload, 2))
 
             boilr.update_medians(powerflow_pload, powerflow_ppv)
 
         try:
             powerflow_inverters = response_powerflow.json()['Body']['Data']['Inverters']['1']
-        except Exception as e:
-            logger.error("Error parsing JSON response (powerflow inverter): {0}".format(str(e)))
+        except Exception as e_general:
+            logger.error("Error parsing JSON response (powerflow inverter): %s", e_general)
             return False
         else:
             powerflow_soc = powerflow_inverters['SOC'] # state of charge
-            logger.debug("SOC: {0} %".format(powerflow_soc))
+            logger.debug("SOC: %s %%", round(powerflow_soc, 1))
 
         ## set gpio mode
         if not rpi_gpio.gpio_mode(config.RpiConfig.rpi_channel_relay_out, "out"):
@@ -160,15 +169,15 @@ def run():
             if boilr.status_prev[0] or (not boilr.status_prev[0] and boilr.status_prev[1] < datetime.now() - timedelta(seconds=config.SystemConfig.start_timeout)):
                 ## check if status unchanged
                 if boilr.status_prev[0] != boilr.status[0]:
-                    logger.debug("Conditions {0} met: contactor {1}".format("not" if not boilr.status[0] else "", "closed" if boilr.status[0] else "open"))
-                    logger.info("Status: {0}".format("active" if boilr.status[0] else "inactive"))
+                    logger.debug("Conditions %s met: contactor %s", "not" if not boilr.status[0] else "", "closed" if boilr.status[0] else "open")
+                    logger.info("Status: %s", "active" if boilr.status[0] else "inactive")
                     boilr.status_prev = boilr.status
 
                     if not rpi_gpio.output_relay(config.RpiConfig.rpi_channel_relay_out, boilr.status[0]):
                         logger.warning("Error while setting gpio channel")
                         return False
                 else:
-                    logger.debug("Contactor unchanged - previous state: {0}".format(boilr.status_prev[0]))
+                    logger.debug("Contactor unchanged - previous state: %s", boilr.status_prev[0])
 
         ## read relay channel
         if not rpi_gpio.gpio_mode(config.RpiConfig.rpi_channel_relay_in, "in"):
@@ -184,30 +193,30 @@ def run():
         return True
 
 
-## manually override contactor status
 def manual_override(args):
+    """Function manually override contactor status"""
     try:
         if not rpi_gpio.gpio_mode(config.RpiConfig.rpi_channel_relay_out, "out") or not rpi_gpio.gpio_mode(config.RpiConfig.rpi_channel_relay_in, "in"):
             raise SystemError("GPIO mode failed")
 
         if args in {0, 1}:
-            logger.debug("Manual override: contactor {0}".format("closed" if args == 1 else "open"))
-            logger.info("Status: {0} (manual)".format("active" if args == 1 else "inactive"))
+            logger.debug("Manual override: contactor %s", "closed" if args == 1 else "open")
+            logger.info("Status: %s (manual)", "active" if args == 1 else "inactive")
             if not rpi_gpio.output_relay(config.RpiConfig.rpi_channel_relay_out, True if args == 1 else False):
                 raise SystemError("GPIO channel failed")
         else:
-            raise ValueError("Argument not in allowed set: {0}".format(str(args)))
+            raise ValueError(f"Argument not in allowed set: {args}")
 
-    except SystemError as se:
-        logger.error("Error while setting gpio: {0}".format(str(se)))
+    except SystemError as system_exception:
+        logger.error("Error while setting gpio: %s", system_exception)
         return False
 
-    except ValueError as ve:
-        logger.error("Value error: {0}".format(str(ve)))
+    except ValueError as value_error:
+        logger.error("Value error: %s", value_error)
         return False
 
-    except Exception as e:
-        logger.error("Error: {0}".format(str(e)))
+    except Exception as e_general:
+        logger.error("Error: %s", e_general)
         return False
 
     else:

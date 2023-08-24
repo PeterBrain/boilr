@@ -81,7 +81,7 @@ optional arguments:
   -v, --verbose         log extra information
 
 commands:
-  {start,stop,status,restart,debug,manual}
+  {start,stop,status,restart,run,manual}
     start               Starts boilr daemon
     stop                Stops boilr daemon
     status              Show the status of boilr daemon
