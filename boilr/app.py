@@ -59,7 +59,7 @@ boilr = Boilr()
 
 
 def run():
-    """Function run"""
+    """Function data gathering and processing"""
     ## check date range
     (boilr.date_check, date_check_msg) = helper.date_check(config.SystemConfig.active_date_range)
 
@@ -148,7 +148,7 @@ def run():
         ## set gpio mode
         if not rpi_gpio.gpio_mode(config.RpiConfig.rpi_channel_relay_out, "out"):
             logger.warning("Error while setting gpio mode for: output")
-            logger.debug("skipping condition evaluation")
+            logger.debug("Skipping condition evaluation")
             return False
         else:
             logger.debug("Checking conditions")
