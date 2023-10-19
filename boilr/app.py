@@ -142,8 +142,12 @@ def run():
             logger.error("Error parsing JSON response (powerflow inverter): %s", e_general)
             return False
         else:
-            powerflow_soc = powerflow_inverters['SOC'] # state of charge
-            logger.debug("SOC: %s %%", round(powerflow_soc, 1))
+             if not powerflow_site['P_Akku'] is None:
+                powerflow_soc = powerflow_inverters['SOC'] # state of charge
+                logger.debug("SOC: %s %%", round(powerflow_soc, 1))
+            else:
+                powerflow_soc = 100
+                logger.debug("SOC: Battery not active, ignoring SOC")
 
         ## set gpio mode
         if not rpi_gpio.gpio_mode(config.RpiConfig.rpi_channel_relay_out, "out"):
