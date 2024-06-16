@@ -1,3 +1,4 @@
+"""import configuration"""
 import os
 import logging
 import yaml
@@ -20,9 +21,10 @@ class SystemConfig():
     moving_median_list_size = 5 # size of the array for past request values
     charge_threshold = 85 # min battery state of charge in %
     ppv_tolerance = 100 # tolerance pv production in W
-    heater_power = 2600 # power of the heating element in W (power availability) (2550W in datasheet)
+    heater_power = 2600 # power of the heating element in W (for power availability calculation)
     active_date_range = ["01-01", "31-12"] # may - oct (day-month) ([start, end])
-    active_time_range = ["00:00", "23:59"] # after charging the battery; before discharging the battery (hour:minute) 10:00 - 17:00 ([start, end])
+    active_time_range = ["00:00", "23:59"] # after charge_threshold & before discharging the battery
+        # e.g.: 10:00 - 17:00 ([start, end]) (hour:minute)
 
 class RpiConfig():
     """Class GPIO configuration"""
@@ -35,7 +37,8 @@ class EndpointConfig():
     max_retries = 3 # maximum retries for requests
     scheme = "http://" # scheme
     ip = "example.local" # domain/ip address of the inverter
-    api = "/solar_api/v1" # api version (inverter specific; check with this URI: http://<ip-address>/solar_api/GetAPIVersion.cgi)
+    api = "/solar_api/v1" # api version (inverter specific)
+        # check with this URI: http://<ip-address>/solar_api/GetAPIVersion.cgi
     powerflow = "/GetPowerFlowRealtimeData.fcgi" # resource
 
 
@@ -49,7 +52,7 @@ except FileNotFoundError as file_not_found:
     logger.info("Preceeding with defaults")
 
 except Exception as e_general:
-    logger.error("Unrecoverable error: %s", e_general)
+    logger.error("Unrecoverable error while importing user configuration: %s", e_general)
     logger.info("Preceeding with defaults")
 
 else:

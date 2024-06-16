@@ -1,16 +1,17 @@
+"""GPIO"""
 import logging
 
 logger = logging.getLogger(__name__)
 
-def gpio_mode(channel, mode: str):
+def gpio_mode(channel: int, mode: str):
     """Function set GPIO mode to channel"""
     return False
 
-def output_relay(channel, state: bool):
+def output_relay(channel: int, state: bool):
     """Function set GPIO channel to state"""
     return False
 
-def input_relay(channel):
+def input_relay(channel: int):
     """Function reading GPIO channel"""
     return False
 
@@ -20,12 +21,21 @@ def cleanup():
 
 try:
     import RPi.GPIO as GPIO
+except ImportError as ie:
+    logger.debug("Unable to import RPi.GPIO module: %s", ie)
 except RuntimeError as re:
-    logger.error("While importing RPi.GPIO! This is probably because you are not executing this script on a Raspberry Pi or you need elevated privileges. %s", re)
+    logger.error(
+        "While importing RPi.GPIO! This is probably because you are not executing \
+            this script on a Raspberry Pi or you need elevated privileges. %s",
+        re
+    )
 except Exception as e_general:
-    logger.error("Unexpected: Something went wrong while importing Raspberry GPIO module: %s", e_general)
+    logger.error(
+        "Unexpected: Something went wrong while importing GPIO module: %s",
+        e_general
+    )
 else:
-    def gpio_mode(channel, mode: str):
+    def gpio_mode(channel: int, mode: str):
         """Function set GPIO mode to channel"""
         logger.debug("Define gpio channel %s and assign mode '%s'", channel, mode)
         GPIO.setmode(GPIO.BCM) # GPIO number (GPIO.BOARD for board number)
@@ -41,7 +51,7 @@ else:
         return True
 
 
-    def output_relay(channel, state: bool):
+    def output_relay(channel: int, state: bool):
         """Function set GPIO channel to state"""
         if state:
             relay = True
@@ -53,11 +63,11 @@ else:
         return True
 
 
-    def input_relay(channel):
+    def input_relay(channel: int):
         """Function reading GPIO channel"""
         logger.debug("Reading gpio channel %s", channel)
-        input = GPIO.input(channel) # True or False
-        return input
+        relay_input = GPIO.input(channel) # True or False
+        return relay_input
 
 
     def cleanup():

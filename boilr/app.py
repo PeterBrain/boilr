@@ -1,11 +1,14 @@
+"""main app"""
 import logging
 import statistics
 from datetime import datetime, timedelta
 from typing import List
 from collections import deque
+from urllib3.util import Retry
 import requests
 from requests.adapters import HTTPAdapter
-from requests.exceptions import ConnectionError, Timeout, TooManyRedirects, RequestException
+from requests.exceptions import ConnectionError as RequestsConnectionError, \
+    Timeout, TooManyRedirects, RequestException
 
 import boilr.config as config
 import boilr.daemon as daemon
@@ -75,7 +78,8 @@ def run():
         return False
     else:
         ## check time range
-        (boilr.time_check, time_check_msg) = helper.time_check(config.SystemConfig.active_time_range)
+        (boilr.time_check, time_check_msg) = \
+            helper.time_check(config.SystemConfig.active_time_range)
 
         # time_check negative -> process shutdown sequence
         # time_check positive -> continue with program
@@ -95,16 +99,22 @@ def run():
 
     # session object with retry functionality
     session = requests.Session()
-    adapter = HTTPAdapter(max_retries=config.EndpointConfig.max_retries)
+    retries = Retry(
+        total=config.EndpointConfig.max_retries,
+        backoff_factor=0.1,
+        status_forcelist=[502, 503, 504],
+        allowed_methods={'GET'},
+    )
+    adapter = HTTPAdapter(max_retries=retries)
     session.mount('http://', adapter)
     session.mount('https://', adapter)
 
     try:
         response_powerflow = session.get(
-                inverter_url + config.EndpointConfig.api + config.EndpointConfig.powerflow,
-                timeout=config.EndpointConfig.request_timeout
-            )
-    except (ConnectionError, Timeout, TooManyRedirects, RequestException) as exception:
+            inverter_url + config.EndpointConfig.api + config.EndpointConfig.powerflow,
+            timeout=config.EndpointConfig.request_timeout
+        )
+    except (RequestsConnectionError, Timeout, TooManyRedirects, RequestException) as exception:
         logger.warning("Error in request: %s", exception)
         boilr.update_medians(0, 0)
     except Exception as e_general:
@@ -124,10 +134,14 @@ def run():
             logger.error("Error parsing JSON response (powerflow site): %s", e_general)
             return False
         else:
-            powerflow_pgrid = powerflow_site['P_Grid'] or 0 # + -> from grid, - -> to grid, null -> no meter enabled
-            powerflow_pakku = powerflow_site['P_Akku'] or 0 # + -> discharge, - -> charge, null -> not active
-            powerflow_ppv = powerflow_site['P_PV'] or 0 # + -> production, null -> inverter not running
-            powerflow_pload = powerflow_site['P_Load'] or 0 # - -> current load
+            powerflow_pgrid = powerflow_site['P_Grid'] or 0
+                # + -> from grid, - -> to grid, null -> no meter enabled
+            powerflow_pakku = powerflow_site['P_Akku'] or 0
+                # + -> discharge, - -> charge, null -> not active
+            powerflow_ppv = powerflow_site['P_PV'] or 0
+                # + -> production, null -> inverter not running
+            powerflow_pload = powerflow_site['P_Load'] or 0
+                # - -> current load
 
             logger.debug("Powerflow grid: %s W", round(powerflow_pgrid, 2))
             logger.debug("Powerflow akku: %s W", round(powerflow_pakku, 2))
@@ -170,14 +184,26 @@ def run():
             ## check start timeout (instant off, delayed starting)
             ## previous true -> condition met (instant off)
             ## previous false & timedelta between toggle -> condition met (delayed starting)
-            if boilr.status_prev[0] or (not boilr.status_prev[0] and boilr.status_prev[1] < datetime.now() - timedelta(seconds=config.SystemConfig.start_timeout)):
+            if boilr.status_prev[0] or (not boilr.status_prev[0] and \
+                (
+                    boilr.status_prev[1] < datetime.now()
+                    - timedelta(seconds=config.SystemConfig.start_timeout)
+                )
+            ):
                 ## check if status unchanged
                 if boilr.status_prev[0] != boilr.status[0]:
-                    logger.debug("Conditions %s met: contactor %s", "not" if not boilr.status[0] else "", "closed" if boilr.status[0] else "open")
+                    logger.debug(
+                        "Conditions %s met: contactor %s",
+                        "not" if not boilr.status[0] else "",
+                        "closed" if boilr.status[0] else "open"
+                    )
                     logger.info("Status: %s", "active" if boilr.status[0] else "inactive")
                     boilr.status_prev = boilr.status
 
-                    if not rpi_gpio.output_relay(config.RpiConfig.rpi_channel_relay_out, boilr.status[0]):
+                    if not rpi_gpio.output_relay(
+                        config.RpiConfig.rpi_channel_relay_out,
+                        boilr.status[0]
+                    ):
                         logger.warning("Error while setting gpio channel")
                         return False
                 else:
@@ -193,20 +219,24 @@ def run():
         else:
             pass
 
-    finally:
-        return True
+    return True
 
 
 def manual_override(args):
     """Function manually override contactor status"""
     try:
-        if not rpi_gpio.gpio_mode(config.RpiConfig.rpi_channel_relay_out, "out") or not rpi_gpio.gpio_mode(config.RpiConfig.rpi_channel_relay_in, "in"):
+        if not rpi_gpio.gpio_mode(config.RpiConfig.rpi_channel_relay_out, "out") or \
+            not rpi_gpio.gpio_mode(config.RpiConfig.rpi_channel_relay_in, "in") \
+        :
             raise SystemError("GPIO mode failed")
 
         if args in {0, 1}:
             logger.debug("Manual override: contactor %s", "closed" if args == 1 else "open")
             logger.info("Status: %s (manual)", "active" if args == 1 else "inactive")
-            if not rpi_gpio.output_relay(config.RpiConfig.rpi_channel_relay_out, True if args == 1 else False):
+            if not rpi_gpio.output_relay(
+                config.RpiConfig.rpi_channel_relay_out,
+                True if args == 1 else False
+            ):
                 raise SystemError("GPIO channel failed")
         else:
             raise ValueError(f"Argument not in allowed set: {args}")
