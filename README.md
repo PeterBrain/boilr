@@ -86,7 +86,7 @@ commands:
     stop                Stops boilr daemon
     status              Show the status of boilr daemon
     restart             Restarts boilr daemon
-    run                 Starts boilr in command line
+    run                 Starts boilr in command-line
     manual              Manually override gpio channel (contactor)
 
 Additional hardware required. Please check:
@@ -104,13 +104,13 @@ python3 setup.py
 ### Software
 
 - Raspberry Pi with operating system (for me it is model 1B with headless Raspbian)
-- Python 3 (tested with 3.9)
+- Python 3 (tested with 3.10)
 - some python packages
 - Docker
 
 ### Hardware
 
-Here is a list of all parts I used:
+Here is a list of all parts I used (2020):
 
 - Contactor to switch the three phases AC (~20€)
 - 5x1.5mm2 copper stranded cable (~10€)
@@ -118,7 +118,7 @@ Here is a list of all parts I used:
 - circuit breaker (I had one available, but it would cost around 20€)
 - Distribution box (~20€)
 - Raspberry Pi 1B (used for about 5€) + an sd card for the os
-- Relay for the pi (5pcs for 8€, but we need only one)
+- Relay for the pi (5pcs for 8€, only one necessary)
 - Ethernet cable (I had an old one at home (Cat5 - not even Cat5e))
 - Network switch (used, gigabit (overkill) around 5-10€, or an old router with a builtin switch for free)
 

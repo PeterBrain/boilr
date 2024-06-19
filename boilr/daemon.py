@@ -1,3 +1,4 @@
+"""daemon"""
 import sys
 import os
 import time
@@ -21,7 +22,7 @@ def is_verbose(args):
 
 
 def daemon_start(args=None):
-    """Function starting daemon with args"""
+    """Function starting daemon with args - start main thread"""
     is_verbose(args)
 
     if core.mainctrl.verbose:
@@ -40,7 +41,7 @@ def daemon_start(args=None):
 
 
 def daemon_stop(args=None):
-    """Function stopping daemon with args"""
+    """Function stopping daemon with args - stop main thread"""
     is_verbose(args)
 
     if core.mainctrl.verbose:
@@ -49,10 +50,9 @@ def daemon_stop(args=None):
         logger.info("Stopping %s...", config.SystemConfig.prog_name)
 
     if os.path.exists(config.SystemConfig.pidpath):
-        with open(config.SystemConfig.pidpath) as pid:
+        with open(config.SystemConfig.pidpath, "r", encoding="utf-8") as pid:
             try:
-                core.stop_event.set()
-                os.kill(int(pid.readline()), signal.SIGINT)
+                os.kill(int(pid.readline()), signal.SIGINT) # kill process via DaemonContext
 
                 wait="Stopping.."
                 while os.path.exists(config.SystemConfig.pidpath):
@@ -69,7 +69,11 @@ def daemon_stop(args=None):
                 logger.error("ProcessLookupError: %s", ple)
                 return False
             except OSError as ose:
-                logger.error("Process %s could not be terminated: %s", config.SystemConfig.prog_name, ose)
+                logger.error(
+                    "Process %s could not be terminated: %s",
+                    config.SystemConfig.prog_name,
+                    ose
+                )
                 logger.warning("Attempting process %s cleanup", config.SystemConfig.prog_name)
                 os.remove(config.SystemConfig.pidpath)
                 sys.exit(1)
@@ -80,7 +84,10 @@ def daemon_stop(args=None):
                 logger.info("Process is now stopped")
 
     else:
-        logger.error("Process isn't running (according to the absence of %s).", config.SystemConfig.pidpath)
+        logger.error(
+            "Process isn't running (according to the absence of %s).",
+            config.SystemConfig.pidpath
+        )
 
     return True
 
@@ -125,7 +132,9 @@ def daemon_status(args):
 
         msg += f"\nContactor status: {status}"
         msg += f"\nContactor last changed: {status_timestamp}"
-        msg += f"\nContactor {'closed' if status else 'open'} for {round((status_timestamp - status_timestamp_prev).total_seconds())} seconds, Previously {status_prev}"
+        msg += f"\nContactor {'closed' if status else 'open'} for \
+            {round((status_timestamp - status_timestamp_prev).total_seconds())} \
+            seconds, Previously {status_prev}"
         msg += f"\nPower load: {boilr.pload} W, Median: {boilr.pload_median} W"
         msg += f"\nPower pv: {boilr.ppv} W, Median: {boilr.ppv_median} W"
         print(msg)
@@ -145,28 +154,28 @@ def daemon_manual(args):
 
 
 daemon = daemon.DaemonContext(
-        files_preserve=[ # preserve logging handler
-            logg.file_handler.stream,
-            logg.console_handler.stream,
-        ],
-        chroot_directory=config.SystemConfig.chroot_dir,
-        working_directory=config.SystemConfig.working_directory,
-        umask=0o002,
-        pidfile=daemon.pidfile.PIDLockFile(config.SystemConfig.pidpath),
-        detach_process=None,
-        signal_map={
-            signal.SIGTERM: core.mainctrl.main_thread_stop,
-            signal.SIGTSTP: core.mainctrl.main_thread_stop,
-            signal.SIGINT: core.mainctrl.main_thread_stop,
-            #signal.SIGKILL: daemon_stop,
-            signal.SIGUSR1: daemon_status,
-            signal.SIGUSR2: daemon_status,
-        },
-        uid=None, #1001
-        gid=None, #777
-        initgroups=False,
-        prevent_core=True,
-        stdin=sys.stdin,
-        stdout=sys.stdout,
-        stderr=sys.stderr
-    )
+    files_preserve=[ # preserve logging handler
+        logg.file_handler.stream,
+        logg.console_handler.stream,
+    ],
+    chroot_directory=config.SystemConfig.chroot_dir,
+    working_directory=config.SystemConfig.working_directory,
+    umask=0o002,
+    pidfile=pidfile.PIDLockFile(config.SystemConfig.pidpath),
+    detach_process=None,
+    signal_map={
+        signal.SIGTERM: core.mainctrl.main_thread_stop,
+        signal.SIGTSTP: core.mainctrl.main_thread_stop,
+        signal.SIGINT: core.mainctrl.main_thread_stop,
+        #signal.SIGKILL: daemon_stop,
+        signal.SIGUSR1: daemon_status,
+        signal.SIGUSR2: daemon_status,
+    },
+    uid=None, #1001
+    gid=None, #777
+    initgroups=False,
+    prevent_core=True,
+    stdin=sys.stdin,
+    stdout=sys.stdout,
+    stderr=sys.stderr
+)
