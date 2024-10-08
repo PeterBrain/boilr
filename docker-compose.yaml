@@ -5,12 +5,12 @@ services:
   boilr:
     container_name: boilr
     build: .
+    restart: unless-stopped
+    privileged: true
     volumes:
       - ./config.yaml:/config.yaml
     devices:
       - /dev/gpiomem:/dev/gpiomem
-    restart: unless-stopped
-    privileged: true
     networks:
       - boilr-network
 

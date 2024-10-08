@@ -8,9 +8,12 @@ boilr:
   ppv_tolerance: 100 # tolerance pv production in W
   heater_power: 2600 # max power of the heating element in W (for power availability calculation)
 
-  active_date_range: ["01-01", "31-12"] # may - oct (day-month) ([start, end])
-  active_time_range: ["00:00", "23:59"] # after charge_threshold & before discharging the battery
-    # e.g.: 10:00 - 17:00 ([start, end]) (hour:minute)
+  active_date_range: ["01-01", "31-12"] # (day-month) ([start, end])
+    # e.g.: may to oct -> ["01-05", "31-10"]
+  active_time_range: ["00:00", "23:59"] # (hour:minute) ([start, end])
+    # e.g.: 10am to 5pm -> ["10:00", "17:00"]
+    # boilr is active after charge_threshold is exceeded
+    # boilr is inactive before the battery is discharged
 
 rpi:
   rpi_channel_relay_out: 17 # board number 11
