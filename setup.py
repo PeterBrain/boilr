@@ -22,6 +22,7 @@ setup(
         'docutils',
         'idna',
         'lockfile',
+        'paho-mqtt',
         'python-daemon',
         'PyYAML',
         'requests',
