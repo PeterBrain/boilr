@@ -2,12 +2,10 @@
 boilr:
   interval: 10 # check api every x seconds
   start_timeout: 120 # min time between contactor state change in seconds
-
   moving_median_list_size: 5 # size of the array for past request values
   charge_threshold: 85 # min battery state of charge in %
   ppv_tolerance: 100 # tolerance pv production in W
   heater_power: 2600 # max power of the heating element in W (for power availability calculation)
-
   active_date_range: ["01-01", "31-12"] # (day-month) ([start, end])
     # e.g.: may to oct -> ["01-05", "31-10"]
   active_time_range: ["00:00", "23:59"] # (hour:minute) ([start, end])
@@ -27,3 +25,8 @@ endpoint:
   api: "/solar_api/v1" # api version (inverter specific)
     # check with this URI: http://<ip-address>/solar_api/GetAPIVersion.cgi
   powerflow: "/GetPowerFlowRealtimeData.fcgi" # resource
+
+mqtt:
+  broker_ip: "10.0.10.60" # ip address of the mqtt broker
+  broker_port: 1883 # port of the broker
+  topic: "boilr" # root mqtt topic

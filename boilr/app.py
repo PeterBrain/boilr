@@ -14,6 +14,7 @@ import boilr.config as config
 import boilr.daemon as daemon
 import boilr.helper as helper
 import boilr.rpi_gpio as rpi_gpio
+from boilr.mqtt import publish_mqtt
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,7 @@ class Boilr:
         """Function update contactor status"""
         self.status = (state, datetime.now())
         logger.debug("Status updated: %s", state)
+        publish_mqtt("contactor/state", state)
         return True
 
     def update_medians(self, powerflow_pload, powerflow_ppv):
@@ -56,6 +58,10 @@ class Boilr:
         else:
             logger.debug("Median power ppv: %s W", round(self.ppv_median, 2))
             logger.debug("Median power load: %s W", round(self.pload_median, 2))
+            if boilr.date_check and boilr.time_check and False: # DEV
+                publish_mqtt("statistics/median/load", self.pload_median)
+                publish_mqtt("statistics/median/pv", self.ppv_median)
+
             return True
 
 boilr = Boilr()
@@ -145,7 +151,7 @@ def run():
 
             logger.debug("Powerflow grid: %s W", round(powerflow_pgrid, 2))
             logger.debug("Powerflow akku: %s W", round(powerflow_pakku, 2))
-            logger.debug("Powerflow ppv: %s W", round(powerflow_ppv, 2))
+            logger.debug("Powerflow pv: %s W", round(powerflow_ppv, 2))
             logger.debug("Powerflow load: %s W", round(powerflow_pload, 2))
 
             boilr.update_medians(powerflow_pload, powerflow_ppv)

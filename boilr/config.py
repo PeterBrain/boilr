@@ -22,9 +22,13 @@ class SystemConfig():
     charge_threshold = 85 # min battery state of charge in %
     ppv_tolerance = 100 # tolerance pv production in W
     heater_power = 2600 # power of the heating element in W (for power availability calculation)
-    active_date_range = ["01-01", "31-12"] # may - oct (day-month) ([start, end])
-    active_time_range = ["00:00", "23:59"] # after charge_threshold & before discharging the battery
-        # e.g.: 10:00 - 17:00 ([start, end]) (hour:minute)
+
+    active_date_range = ["01-01", "31-12"] # (day-month) ([start, end])
+    # e.g.: may to oct -> ["01-05", "31-10"]
+    active_time_range = ["00:00", "23:59"] # (hour:minute) ([start, end])
+    # e.g.: 10am to 5pm -> ["10:00", "17:00"]
+    # boilr is active after charge_threshold is exceeded
+    # boilr is inactive before the battery is discharged
 
 class RpiConfig():
     """Class GPIO configuration"""
@@ -41,6 +45,11 @@ class EndpointConfig():
         # check with this URI: http://<ip-address>/solar_api/GetAPIVersion.cgi
     powerflow = "/GetPowerFlowRealtimeData.fcgi" # resource
 
+class MqttConfig():
+    """Class mqtt broker configuration"""
+    broker_ip = "localhost" # ip address of the mqtt broker
+    broker_port = 1883 # port of the broker
+    topic = "boilr" # root mqtt topic
 
 try:
     with open(SystemConfig.config_file, "r", encoding="utf-8") as yaml_file:
@@ -61,6 +70,7 @@ else:
     app_config = user_config["boilr"]
     rpi_config = user_config["rpi"]
     rest_config = user_config["endpoint"]
+    mqtt_config = user_config["mqtt"]
 
     SystemConfig.interval = app_config['interval']
     SystemConfig.start_timeout = app_config['start_timeout']
@@ -80,6 +90,10 @@ else:
     EndpointConfig.ip = rest_config['ip']
     EndpointConfig.api = rest_config['api']
     EndpointConfig.powerflow = rest_config['powerflow']
+
+    MqttConfig.broker_ip = mqtt_config['broker_ip']
+    MqttConfig.broker_port = mqtt_config['broker_port']
+    MqttConfig.topic = mqtt_config['topic']
 
     logger.debug("Finished applying configuration")
 
