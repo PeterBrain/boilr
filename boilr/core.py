@@ -12,13 +12,12 @@ thread_event = threading.Event()
 class MainCtrl:
     """Class thread control"""
     def __init__(self, thread_continue=None, verbose=None, manual=None):
-        self.thread_continue = thread_continue or True
-        self.verbose = verbose or False
-        self.manual = manual or False
+        self.thread_continue = thread_continue if thread_continue is not None else True
+        self.verbose = verbose if verbose is not None else False
+        self.manual = manual if manual is not None else False
 
     def main_thread_stop(self, signum=None, frame=None):
         """Function stopping main thread"""
-        #thread_event.set()
         self.thread_continue = False
 
 mainctrl = MainCtrl()
@@ -28,7 +27,7 @@ def app_thread(thread_stop_event, mainctrl_instance):
     """Function non blocking app thread - called by main_thread"""
     logger.debug("Starting app thread")
 
-    while mainctrl_instance.thread_continue and not thread_stop_event.isSet():
+    while mainctrl_instance.thread_continue and not thread_stop_event.is_set():
         if mainctrl_instance.verbose:
             logger.debug("Continuing thread...")
 
@@ -44,14 +43,16 @@ def main_thread(args, mainctrl_instance):
         mainctrl_instance.manual = True
         app.manual_override(args.manual[0])
 
+    thread = threading.Thread(target=app_thread, args=(thread_event, mainctrl_instance,))
+    thread.daemon = True
+    thread.start()
+
     try:
-        thread = threading.Thread(target=app_thread, args=(thread_event, mainctrl_instance,))
+        while True:
+            if not thread.is_alive():
+                break
 
-        thread.daemon = True
-        thread.start()
-
-        while thread.is_alive():
-            thread.join() # wait for the thread to complete
+            thread.join(timeout=0.1)
 
     except KeyboardInterrupt as keyboard_interrupt:
         if mainctrl_instance.verbose:

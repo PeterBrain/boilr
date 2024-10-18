@@ -46,18 +46,27 @@ class Boilr:
 
     def update_medians(self, powerflow_pload, powerflow_ppv):
         """Function median calculation"""
-        self.pload.append(powerflow_pload)
-        self.ppv.append(powerflow_ppv)
-
         try:
+            if powerflow_pload is None or powerflow_ppv is None:
+                raise ValueError("Input values cannot be None")
+
+            self.pload.append(powerflow_pload)
+            self.ppv.append(powerflow_ppv)
+
+            if not self.pload or not self.ppv:
+                self.pload_median = 0
+                self.ppv_median = 0
+                return False
+
             self.pload_median = statistics.median(self.pload)
             self.ppv_median = statistics.median(self.ppv)
         except Exception as e_general:
             logger.error("Error in median calculation: %s", e_general)
             return False
         else:
-            logger.debug("Median power ppv: %s W", round(self.ppv_median, 2))
+            logger.debug("Median power pv: %s W", round(self.ppv_median, 2))
             logger.debug("Median power load: %s W", round(self.pload_median, 2))
+
             if boilr.date_check and boilr.time_check and False: # DEV
                 publish_mqtt("statistics/median/load", self.pload_median)
                 publish_mqtt("statistics/median/pv", self.ppv_median)
@@ -123,10 +132,12 @@ def run():
     except (RequestsConnectionError, Timeout, TooManyRedirects, RequestException) as exception:
         logger.warning("Error in request: %s", exception)
         boilr.update_medians(0, 0)
+        return False
     except Exception as e_general:
         logger.error("Unrecoverable error in request: %s", e_general)
         boilr.update_medians(0, 0)
         daemon.daemon_stop()
+        return False
     else:
         # check status code of the response
         if response_powerflow.status_code != 200:
