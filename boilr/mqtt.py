@@ -1,6 +1,7 @@
 """mqtt"""
 import logging
 import paho.mqtt.client as mqtt
+
 import boilr.config as config
 
 logger = logging.getLogger(__name__)

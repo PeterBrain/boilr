@@ -66,6 +66,8 @@ class Boilr:
         else:
             logger.debug("Median power pv: %s W", round(self.ppv_median, 2))
             logger.debug("Median power load: %s W", round(self.pload_median, 2))
+            #logger.debug("Power load deque: %s", list(self.pload))
+            #logger.debug("Power pv deque: %s", list(self.ppv))
 
             if boilr.date_check and boilr.time_check and False: # DEV
                 publish_mqtt("statistics/median/load", self.pload_median)

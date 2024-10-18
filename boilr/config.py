@@ -1,7 +1,9 @@
-"""import configuration"""
+"""configuration"""
 import os
 import logging
 import yaml
+
+import boilr._version as version
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +16,8 @@ class SystemConfig():
     chroot_dir = None
     logging_date_format = '%Y-%m-%dT%H:%M:%S'
     logging_format = '[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s'
-    config_file = "../config.yaml"
+    default_config_file = os.path.join(os.path.dirname(__file__), "..", "config.yaml")
+    config_file = os.getenv("BOILR_CONFIG_PATH", default_config_file)
 
     interval = 10 # check fronius api every x seconds
     start_timeout = 120 # min time between contactor state change in seconds
@@ -51,51 +54,60 @@ class MqttConfig():
     broker_port = 1883 # port of the broker
     topic = "boilr" # root mqtt topic
 
-try:
-    with open(SystemConfig.config_file, "r", encoding="utf-8") as yaml_file:
-        user_config = yaml.safe_load(yaml_file)
-        logger.debug("Parsed configuration file: %s", yaml_file.name)
+def initialize():
+    """Initialize configuration"""
+    logger.info("Boilr Version: %s", version.__version__)
+    logger.info("Config initialized with logpath: %s", SystemConfig.logpath)
+    import_config()
 
-except FileNotFoundError as file_not_found:
-    logger.error("File not found: %s", file_not_found)
-    logger.info("Preceeding with defaults")
+def import_config():
+    """Import configuration file"""
+    try:
+        with open(SystemConfig.config_file, "r", encoding="utf-8") as yaml_file:
+            user_config = yaml.safe_load(yaml_file)
+            logger.debug("Parsed configuration file: %s", yaml_file.name)
 
-except Exception as e_general:
-    logger.error("Unrecoverable error while importing user configuration: %s", e_general)
-    logger.info("Preceeding with defaults")
+    except FileNotFoundError as file_not_found:
+        logger.error("File not found: %s", file_not_found)
+        logger.info("Continue with defaults")
 
-else:
-    logger.debug("Applying configuration")
+    except Exception as e_general:
+        logger.error("Unrecoverable error while importing user configuration: %s", e_general)
+        logger.info("Continue with defaults")
 
-    app_config = user_config["boilr"]
-    rpi_config = user_config["rpi"]
-    rest_config = user_config["endpoint"]
-    mqtt_config = user_config["mqtt"]
+    else:
+        logger.debug("Applying configuration")
 
-    SystemConfig.interval = app_config['interval']
-    SystemConfig.start_timeout = app_config['start_timeout']
-    SystemConfig.moving_median_list_size = app_config['moving_median_list_size']
-    SystemConfig.charge_threshold = app_config['charge_threshold']
-    SystemConfig.ppv_tolerance = app_config['ppv_tolerance']
-    SystemConfig.heater_power = app_config['heater_power']
-    SystemConfig.active_date_range = app_config['active_date_range']
-    SystemConfig.active_time_range = app_config['active_time_range']
+        app_config = user_config["boilr"]
+        rpi_config = user_config["rpi"]
+        rest_config = user_config["endpoint"]
+        mqtt_config = user_config["mqtt"]
 
-    RpiConfig.rpi_channel_relay_out = rpi_config['rpi_channel_relay_out']
-    RpiConfig.rpi_channel_relay_in = rpi_config['rpi_channel_relay_in']
+        SystemConfig.interval = app_config['interval']
+        SystemConfig.start_timeout = app_config['start_timeout']
+        SystemConfig.moving_median_list_size = app_config['moving_median_list_size']
+        SystemConfig.charge_threshold = app_config['charge_threshold']
+        SystemConfig.ppv_tolerance = app_config['ppv_tolerance']
+        SystemConfig.heater_power = app_config['heater_power']
+        SystemConfig.active_date_range = app_config['active_date_range']
+        SystemConfig.active_time_range = app_config['active_time_range']
 
-    EndpointConfig.request_timeout = rest_config['request_timeout']
-    EndpointConfig.max_retries = rest_config['max_retries']
-    EndpointConfig.scheme = rest_config['scheme']
-    EndpointConfig.ip = rest_config['ip']
-    EndpointConfig.api = rest_config['api']
-    EndpointConfig.powerflow = rest_config['powerflow']
+        RpiConfig.rpi_channel_relay_out = rpi_config['rpi_channel_relay_out']
+        RpiConfig.rpi_channel_relay_in = rpi_config['rpi_channel_relay_in']
 
-    MqttConfig.broker_ip = mqtt_config['broker_ip']
-    MqttConfig.broker_port = mqtt_config['broker_port']
-    MqttConfig.topic = mqtt_config['topic']
+        EndpointConfig.request_timeout = rest_config['request_timeout']
+        EndpointConfig.max_retries = rest_config['max_retries']
+        EndpointConfig.scheme = rest_config['scheme']
+        EndpointConfig.ip = rest_config['ip']
+        EndpointConfig.api = rest_config['api']
+        EndpointConfig.powerflow = rest_config['powerflow']
 
-    logger.debug("Finished applying configuration")
+        MqttConfig.broker_ip = mqtt_config['broker_ip']
+        MqttConfig.broker_port = mqtt_config['broker_port']
+        MqttConfig.topic = mqtt_config['topic']
 
-finally:
-    pass
+        logger.debug("Finished applying configuration")
+
+    finally:
+        pass
+

@@ -10,7 +10,7 @@ from daemon import pidfile
 import boilr.logger as logg
 import boilr.config as config
 import boilr.core as core
-import boilr.app as app
+#import boilr.app as app
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +24,10 @@ def is_verbose(args):
 def daemon_start(args=None):
     """Function starting daemon with args - start main thread"""
     is_verbose(args)
+
+    logger.info("Attempt to start daemon with pidfile: %s", config.SystemConfig.pidpath)
+
+    config.initialize()
 
     if core.mainctrl.verbose:
         logger.info("Starting %s with ARGS: %s", config.SystemConfig.prog_name, args)
@@ -109,6 +113,8 @@ def daemon_run(args):
     logg.console_handler.setLevel(logging.WARN)
     is_verbose(args)
 
+    config.initialize()
+
     logger.info("Running %s in debug mode", config.SystemConfig.prog_name)
     core.main_thread(args, core.mainctrl)
 
@@ -123,20 +129,35 @@ def daemon_status(args):
         logger.debug("%s Status: %s", config.SystemConfig.prog_name, args)
 
     if os.path.exists(config.SystemConfig.pidpath):
-        boilr = app.boilr
-        (status, status_timestamp) = boilr.status
-        (status_prev, status_timestamp_prev) = boilr.status
-
         msg = f"{config.SystemConfig.prog_name} is running"
         logger.debug(msg)
 
-        msg += f"\nContactor status: {status}"
-        msg += f"\nContactor last changed: {status_timestamp}"
-        msg += f"\nContactor {'closed' if status else 'open'} for \
-            {round((status_timestamp - status_timestamp_prev).total_seconds())} \
-            seconds, Previously {status_prev}"
-        msg += f"\nPower load: {boilr.pload} W, Median: {boilr.pload_median} W"
-        msg += f"\nPower pv: {boilr.ppv} W, Median: {boilr.ppv_median} W"
+        with open(config.SystemConfig.pidpath, "r", encoding="utf-8") as pid:
+            process_id = int(pid.readline())
+            msg += f"\nProcess id: {process_id}"
+
+        # Status variables disabled due to memory separation
+        # suggested fix: use multiprocessing.Manager for shared state with shared_dict
+
+        #boilr = app.boilr
+        #(status, status_timestamp) = boilr.status
+        #(status_prev, status_timestamp_prev) = boilr.status
+
+        #msg += f"\nContactor status: {status}"
+        #msg += f"\nContactor last changed: {status_timestamp}"
+        #msg += f"\nContactor {'closed' if status else 'open'} for " \
+        #    f"{round((status_timestamp - status_timestamp_prev).total_seconds())} " \
+        #    f"seconds, Previously {status_prev}"
+
+        #logger.info("Power load deque: %s", list(boilr.pload))
+        #logger.info("Power pv deque: %s", list(boilr.ppv))
+
+        #latest_load = boilr.pload[-1] if boilr.pload else 0
+        #msg += f"\nPower load: {latest_load} W, Median: {boilr.pload_median} W"
+
+        #latest_pv = boilr.ppv[-1] if boilr.ppv else 0
+        #msg += f"\nPower pv: {latest_pv} W, Median: {boilr.ppv_median} W"
+
         print(msg)
     else:
         msg = f"{config.SystemConfig.prog_name} is not running"
