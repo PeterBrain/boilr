@@ -1,4 +1,4 @@
-"""mqtt"""
+"""MQTT module"""
 import logging
 import paho.mqtt.client as mqtt
 
@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 client = mqtt.Client()
 
 def on_connect(client, userdata, flags, rc):
-    """Function MQTT connection callback"""
+    """MQTT connection callback"""
     if rc == 0:
         logger.debug("Connected to MQTT Broker successfully.")
     else:
@@ -17,13 +17,13 @@ def on_connect(client, userdata, flags, rc):
 client.on_connect = on_connect
 
 def on_message(client, userdata, msg):
-    """Function Handling received MQTT messages - DEV"""
+    """Handling received MQTT messages - DEV"""
     logger.debug("Received message: %s on topic: %s", msg.payload.decode(), msg.topic)
 
 client.on_message = on_message
 
 def publish_mqtt(topic, message):
-    """Function MQTT publish"""
+    """MQTT publish"""
     try:
         client.connect(config.MqttConfig.broker_ip, config.MqttConfig.broker_port, 60)
         client.publish(config.MqttConfig.topic + '/' + topic, message)
@@ -33,7 +33,7 @@ def publish_mqtt(topic, message):
         logger.error("Failed to publish MQTT message: %s", e)
 
 def subscribe_mqtt(topic):
-    """Function MQTT subscribe - DEV"""
+    """MQTT subscribe - DEV"""
     try:
         client.connect(config.MqttConfig.broker_ip, config.MqttConfig.broker_port, 60)
         client.subscribe(config.MqttConfig.topic + '/' + topic)

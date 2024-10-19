@@ -1,4 +1,4 @@
-"""daemon"""
+"""Daemon module"""
 import sys
 import os
 import time
@@ -15,19 +15,33 @@ import boilr.core as core
 logger = logging.getLogger(__name__)
 
 def is_verbose(args):
-    """Function global verbosity store"""
+    """
+    Global verbosity store
+
+    Parameters
+    ----------
+    args : obj
+        Command line arguments
+    """
     if hasattr(args, 'verbose') and getattr(args, 'verbose'):
         core.mainctrl.verbose = args.verbose
         logg.console_handler.setLevel(logging.DEBUG)
 
 
 def daemon_start(args=None):
-    """Function starting daemon with args - start main thread"""
+    """
+    Starting daemon with args - start main thread
+
+    Parameters
+    ----------
+    args : obj, optional
+        Command line arguments (default is None)
+    """
     is_verbose(args)
 
-    logger.info("Attempt to start daemon with pidfile: %s", config.SystemConfig.pidpath)
+    logger.info("Attempt to start daemon with pid file: %s", config.SystemConfig.pidpath)
 
-    config.initialize()
+    config.initialize() # import & initialize user config
 
     if core.mainctrl.verbose:
         logger.info("Starting %s with ARGS: %s", config.SystemConfig.prog_name, args)
@@ -40,12 +54,26 @@ def daemon_start(args=None):
         logger.debug("%s (according to %s)", msg, config.SystemConfig.pidpath)
         sys.exit(1)
     else:
+        daemon = init_daemon()
         with daemon:
             core.main_thread(args, core.mainctrl)
 
 
 def daemon_stop(args=None):
-    """Function stopping daemon with args - stop main thread"""
+    """
+    Stopping daemon with args - stop main thread
+
+    Parameters
+    ----------
+    args : obj, optional
+        Command line arguments (default is None)
+
+    Raises
+    ------
+    ToDo
+    Exception
+        General exception
+    """
     is_verbose(args)
 
     if core.mainctrl.verbose:
@@ -97,7 +125,14 @@ def daemon_stop(args=None):
 
 
 def daemon_restart(args):
-    """Function restarting daemon with args"""
+    """
+    Restarting daemon with args
+
+    Parameters
+    ----------
+    args : obj
+        Command line arguments
+    """
     is_verbose(args)
 
     logger.info("Restarting %s...", config.SystemConfig.prog_name)
@@ -109,18 +144,34 @@ def daemon_restart(args):
 
 
 def daemon_run(args):
-    """Function running daemon with args"""
+    """
+    Running daemon interactively with args
+
+    Parameters
+    ----------
+    args : obj
+        Command line arguments
+    """
     logg.console_handler.setLevel(logging.WARN)
     is_verbose(args)
 
-    config.initialize()
+    config.initialize() # import & initialize user config
 
     logger.info("Running %s in debug mode", config.SystemConfig.prog_name)
     core.main_thread(args, core.mainctrl)
 
 
 def daemon_status(args):
-    """Function printing status of daemon with args"""
+    """
+    Printing status of daemon with args
+
+    Due to memory separation in daemon, status variables from Boilr class are disabled.
+
+    Parameters
+    ----------
+    args : obj
+        Command line arguments
+    """
     is_verbose(args)
 
     if core.mainctrl.verbose:
@@ -136,7 +187,11 @@ def daemon_status(args):
             process_id = int(pid.readline())
             msg += f"\nProcess id: {process_id}"
 
-        # Status variables disabled due to memory separation
+        msg += f"\nPID file: {config.SystemConfig.pidpath}"
+        msg += f"\nLOG file: {config.SystemConfig.logpath}"
+        msg += f"\nConf file: {config.SystemConfig.config_file}"
+
+        # Status variables disabled due to memory separation in daemon
         # suggested fix: use multiprocessing.Manager for shared state with shared_dict
 
         #boilr = app.boilr
@@ -166,7 +221,17 @@ def daemon_status(args):
 
 
 def daemon_manual(args):
-    """Function manually setting contactor output"""
+    """
+    Manually setting contactor output
+
+    - Daemon -> will be stopped and output overridden
+    - Interactively -> continues and output will be overridden
+
+    Parameters
+    ----------
+    args : obj
+        Command line arguments
+    """
     is_verbose(args)
 
     logger.debug("%s Manual mode: %s", config.SystemConfig.prog_name, args.manual)
@@ -174,29 +239,39 @@ def daemon_manual(args):
     core.main_thread(args, core.mainctrl)
 
 
-daemon = daemon.DaemonContext(
-    files_preserve=[ # preserve logging handler
-        logg.file_handler.stream,
-        logg.console_handler.stream,
-    ],
-    chroot_directory=config.SystemConfig.chroot_dir,
-    working_directory=config.SystemConfig.working_directory,
-    umask=0o002,
-    pidfile=pidfile.PIDLockFile(config.SystemConfig.pidpath),
-    detach_process=None,
-    signal_map={
-        signal.SIGTERM: core.mainctrl.main_thread_stop,
-        signal.SIGTSTP: core.mainctrl.main_thread_stop,
-        signal.SIGINT: core.mainctrl.main_thread_stop,
-        #signal.SIGKILL: daemon_stop,
-        signal.SIGUSR1: daemon_status,
-        signal.SIGUSR2: daemon_status,
-    },
-    uid=None, #1001
-    gid=None, #777
-    initgroups=False,
-    prevent_core=True,
-    stdin=sys.stdin,
-    stdout=sys.stdout,
-    stderr=sys.stderr
-)
+def init_daemon():
+    """
+    Initialize daemon context
+
+    Returns
+    -------
+    DaemonContext
+    """
+    daemonContext = daemon.DaemonContext(
+        files_preserve=[ # preserve logging handler
+            logg.file_handler.stream,
+            logg.console_handler.stream,
+        ],
+        chroot_directory=config.SystemConfig.chroot_dir,
+        working_directory=config.SystemConfig.working_directory,
+        umask=0o002,
+        pidfile=pidfile.PIDLockFile(config.SystemConfig.pidpath),
+        detach_process=None,
+        signal_map={
+            signal.SIGTERM: core.mainctrl.main_thread_stop,
+            signal.SIGTSTP: core.mainctrl.main_thread_stop,
+            signal.SIGINT: core.mainctrl.main_thread_stop,
+            #signal.SIGKILL: daemon_stop,
+            signal.SIGUSR1: daemon_status,
+            signal.SIGUSR2: daemon_status,
+        },
+        uid=None, #1001
+        gid=None, #777
+        initgroups=False,
+        prevent_core=True,
+        stdin=sys.stdin,
+        stdout=sys.stdout,
+        stderr=sys.stderr
+    )
+
+    return daemonContext

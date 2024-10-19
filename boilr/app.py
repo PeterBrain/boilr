@@ -1,4 +1,4 @@
-"""main app"""
+"""App module"""
 import logging
 import statistics
 from datetime import datetime, timedelta
@@ -19,7 +19,11 @@ from boilr.mqtt import publish_mqtt
 logger = logging.getLogger(__name__)
 
 class Boilr:
-    """Class boilr status vars"""
+    """
+    Boilr class
+
+    holds all status variables
+    """
     def __init__(
         self, status=None,
         status_prev=None,
@@ -38,14 +42,44 @@ class Boilr:
         self.ppv_median = 0
 
     def update_status(self, state):
-        """Function update contactor status"""
+        """
+        Update contactor status
+
+        Parameters:
+        -----------
+        state : bool
+            State of the contactor
+
+        Returns:
+        --------
+        bool = True
+        """
         self.status = (state, datetime.now())
         logger.debug("Status updated: %s", state)
         publish_mqtt("contactor/state", state)
         return True
 
     def update_medians(self, powerflow_pload, powerflow_ppv):
-        """Function median calculation"""
+        """
+        Median calculation
+
+        Parameters
+        ----------
+        powerflow_pload : float
+            Current power load
+        powerflow_ppv : float
+            Current power from pv
+
+        Returns
+        -------
+        bool
+            true = success, false = fail (exception or not a deque)
+
+        Raises
+        ------
+        Exception
+            General exception, but most likely ValueError
+        """
         try:
             if powerflow_pload is None or powerflow_ppv is None:
                 raise ValueError("Input values cannot be None")
@@ -79,7 +113,20 @@ boilr = Boilr()
 
 
 def run():
-    """Function data gathering and processing"""
+    """
+    Data gathering and processing
+
+    Returns
+    -------
+    bool
+        true = success, false = fail (exception)
+
+    Raises
+    ------
+    ToDo
+    Exception
+        General exception
+    """
     ## check date range
     (boilr.date_check, date_check_msg) = helper.date_check(config.SystemConfig.active_date_range)
 
@@ -163,7 +210,7 @@ def run():
                 # - -> current load
 
             logger.debug("Powerflow grid: %s W", round(powerflow_pgrid, 2))
-            logger.debug("Powerflow akku: %s W", round(powerflow_pakku, 2))
+            logger.debug("Powerflow battery: %s W", round(powerflow_pakku, 2))
             logger.debug("Powerflow pv: %s W", round(powerflow_ppv, 2))
             logger.debug("Powerflow load: %s W", round(powerflow_pload, 2))
 
@@ -242,7 +289,25 @@ def run():
 
 
 def manual_override(args):
-    """Function manually override contactor status"""
+    """
+    Manually override contactor status
+
+    Parameters
+    ----------
+    args : obj
+        Command line arguments
+
+    Returns
+    -------
+    bool
+        true = success, false = fail (exception)
+
+    Raises
+    ------
+    ToDo
+    Exception
+        General exception
+    """
     try:
         if not rpi_gpio.gpio_mode(config.RpiConfig.rpi_channel_relay_out, "out") or \
             not rpi_gpio.gpio_mode(config.RpiConfig.rpi_channel_relay_in, "in") \

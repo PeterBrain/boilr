@@ -1,10 +1,10 @@
-"""GPIO"""
+"""GPIO module"""
 import logging
 
 logger = logging.getLogger(__name__)
 
 def gpio_mode(channel: int, mode: str):
-    """Function set GPIO mode to channel"""
+    """Function set GPIO mode for channel"""
     return False
 
 def output_relay(channel: int, state: bool):
@@ -36,7 +36,21 @@ except Exception as e_general:
     )
 else:
     def gpio_mode(channel: int, mode: str):
-        """Function set GPIO mode to channel"""
+        """
+        Set GPIO mode for channel
+
+        Parameters
+        ----------
+        channel : int
+            GPIO channel on the hardware
+        mode : str
+            input or output
+
+        Returns
+        -------
+        bool
+            true = success; false = fail
+        """
         logger.debug("Define gpio channel %s and assign mode '%s'", channel, mode)
         GPIO.setmode(GPIO.BCM) # GPIO number (GPIO.BOARD for board number)
 
@@ -52,7 +66,21 @@ else:
 
 
     def output_relay(channel: int, state: bool):
-        """Function set GPIO channel to state"""
+        """
+        Set GPIO channel to state
+
+        Parameters
+        ----------
+        channel : int
+            GPIO channel on the hardware
+        state : bool
+            channel hight or low
+
+        Returns
+        -------
+        bool
+            true = success; false = fail
+        """
         if state:
             relay = True
         else:
@@ -64,14 +92,33 @@ else:
 
 
     def input_relay(channel: int):
-        """Function reading GPIO channel"""
+        """
+        Reading GPIO channel
+
+        Parameters
+        ----------
+        channel : int
+            GPIO channel on the hardware
+
+        Returns
+        -------
+        bool
+            Value from input channel (Relay)
+        """
         logger.debug("Reading gpio channel %s", channel)
         relay_input = GPIO.input(channel) # True or False
         return relay_input
 
 
     def cleanup():
-        """Function cleanup GPIO channel"""
+        """
+        Cleanup GPIO channel
+
+        Returns
+        -------
+        bool
+            true = always true
+        """
         logger.debug("Reset gpio channels")
         GPIO.cleanup()
         return True

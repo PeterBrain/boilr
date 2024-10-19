@@ -1,14 +1,14 @@
-"""configuration"""
+"""Configuration module"""
 import os
 import logging
 import yaml
 
-import boilr._version as version
+from boilr._version import version as __version__
 
 logger = logging.getLogger(__name__)
 
 class SystemConfig():
-    """Class system configuration"""
+    """System configuration class"""
     prog_name = "boilr" # program name
     working_directory = "/var/log/" + prog_name #"/var/lib/boilr/"
     logpath = os.path.join(working_directory, prog_name + ".log") #"/var/log/boilr/boilr.log"
@@ -16,7 +16,7 @@ class SystemConfig():
     chroot_dir = None
     logging_date_format = '%Y-%m-%dT%H:%M:%S'
     logging_format = '[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s'
-    default_config_file = os.path.join(os.path.dirname(__file__), "..", "config.yaml")
+    default_config_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config.yaml")
     config_file = os.getenv("BOILR_CONFIG_PATH", default_config_file)
 
     interval = 10 # check fronius api every x seconds
@@ -34,12 +34,12 @@ class SystemConfig():
     # boilr is inactive before the battery is discharged
 
 class RpiConfig():
-    """Class GPIO configuration"""
+    """GPIO configuration class"""
     rpi_channel_relay_out = 17 # board number 11
     rpi_channel_relay_in = 27 # board number 13
 
 class EndpointConfig():
-    """Class endpoint configuration"""
+    """Endpoint configuration class"""
     request_timeout = 5 # timeout for requests in seconds
     max_retries = 3 # maximum retries for requests
     scheme = "http://" # scheme
@@ -49,19 +49,28 @@ class EndpointConfig():
     powerflow = "/GetPowerFlowRealtimeData.fcgi" # resource
 
 class MqttConfig():
-    """Class mqtt broker configuration"""
+    """MQTT broker configuration class"""
     broker_ip = "localhost" # ip address of the mqtt broker
     broker_port = 1883 # port of the broker
     topic = "boilr" # root mqtt topic
 
+
 def initialize():
     """Initialize configuration"""
-    logger.info("Boilr Version: %s", version.__version__)
-    logger.info("Config initialized with logpath: %s", SystemConfig.logpath)
+    logger.info("%s version: %s", SystemConfig.prog_name, __version__)
+    logger.info("Config initialized with log path: %s", SystemConfig.logpath)
     import_config()
 
 def import_config():
-    """Import configuration file"""
+    """
+    Import user configuration file
+
+    Raises
+    ------
+    ToDo
+    Exception
+        General exception
+    """
     try:
         with open(SystemConfig.config_file, "r", encoding="utf-8") as yaml_file:
             user_config = yaml.safe_load(yaml_file)
@@ -110,4 +119,3 @@ def import_config():
 
     finally:
         pass
-

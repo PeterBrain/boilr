@@ -1,11 +1,29 @@
-"""helper functions"""
+"""Helper module"""
 import logging
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
 def date_check(active_date_range):
-    """Function check if current date is within the active date range"""
+    """
+    Function check if current date is within the active date range
+
+    Parameters
+    ----------
+    active_date_range : list(str)
+        Date range in which check should be positive
+
+    Returns
+    -------
+    tuple
+        status of check, message
+
+    Raises
+    ------
+    ToDo
+    Exception
+        General exception
+    """
     logger.debug("Checking date")
 
     current_date = datetime.now()
@@ -32,7 +50,25 @@ def date_check(active_date_range):
 
 
 def time_check(active_time_range):
-    """Function check if current time is within the active time range"""
+    """
+    Check if current time is within the active time range
+
+    Parameters
+    ----------
+    active_time_range : list(str)
+        Time range in which check should be positive
+
+    Returns
+    -------
+    tuple
+        status of check, message
+
+    Raises
+    ------
+    ToDo
+    Exception
+        General exception
+    """
     logger.debug("Checking time")
 
     current_time = datetime.now().time()
