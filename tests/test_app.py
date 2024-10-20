@@ -8,11 +8,13 @@ from requests.exceptions import ConnectionError
 from boilr.app import Boilr, run, boilr, manual_override
 import boilr.config as config
 
+
 @pytest.fixture
 def boilr_instance():
     """Fixture to create a fresh Boilr instance for each test"""
     config.SystemConfig.moving_median_list_size = 5
     return Boilr()
+
 
 def test_boilr_initialization():
     """Test Boilr class initialization"""
@@ -31,6 +33,7 @@ def test_boilr_initialization():
     assert len(boilr.ppv) == 0
     assert boilr.ppv.maxlen == config.SystemConfig.moving_median_list_size
 
+
 @patch('boilr.mqtt.publish_mqtt')
 def test_update_medians(mock_publish):
     """Test updating medians"""
@@ -42,12 +45,14 @@ def test_update_medians(mock_publish):
 
     assert result is True
 
+
 @patch('boilr.app.logger.error')
 def test_update_medians_handles_error(mock_logger_error, boilr_instance):
     """Test update_medians gracefully handles errors during calculation"""
     result = boilr_instance.update_medians(None, 200)
 
     assert result is False
+
 
 @patch('boilr.mqtt.publish_mqtt')
 def test_update_medians_calculation(mock_publish, boilr_instance):
@@ -62,6 +67,7 @@ def test_update_medians_calculation(mock_publish, boilr_instance):
     assert boilr_instance.pload_median == statistics.median(powerflow_ploads)
     assert boilr_instance.ppv_median == statistics.median(powerflow_ppvs)
 
+
 @patch('boilr.mqtt.publish_mqtt')
 def test_update_medians_calculation_partial_data(mock_publish, boilr_instance):
     """Test update_medians with fewer than maxlen data points"""
@@ -74,6 +80,7 @@ def test_update_medians_calculation_partial_data(mock_publish, boilr_instance):
     # Check if the medians are calculated correctly with partial data
     assert boilr_instance.pload_median == statistics.median(powerflow_ploads)
     assert boilr_instance.ppv_median == statistics.median(powerflow_ppvs)
+
 
 def test_update_medians_empty_lists(boilr_instance):
     """Test update_medians with empty deque"""
@@ -89,6 +96,7 @@ def test_update_medians_empty_lists(boilr_instance):
     assert boilr_instance.pload_median == 0
     assert boilr_instance.ppv_median == 0
 
+
 @patch('boilr.helper.date_check')
 @patch('boilr.rpi_gpio.cleanup')
 def test_run_date_check_negative(mock_cleanup, mock_date_check):
@@ -98,6 +106,7 @@ def test_run_date_check_negative(mock_cleanup, mock_date_check):
 
     assert result is False
     mock_cleanup.assert_called_once()
+
 
 @patch('boilr.helper.time_check')
 @patch('boilr.rpi_gpio.cleanup')
@@ -109,6 +118,7 @@ def test_run_time_check_negative(mock_cleanup, mock_time_check):
 
     assert result is False
     mock_cleanup.assert_called_once()
+
 
 @patch('boilr.rpi_gpio.output_relay')
 @patch('boilr.rpi_gpio.gpio_mode')
@@ -124,6 +134,7 @@ def test_manual_override_valid(mock_gpio_mode, mock_output_relay):
     # Test valid override (opening relay)
     result = manual_override(0)
     assert result is True
+
 
 @patch('boilr.rpi_gpio.output_relay')
 @patch('boilr.rpi_gpio.gpio_mode')

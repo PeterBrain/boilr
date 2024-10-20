@@ -4,6 +4,7 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+
 def date_check(active_date_range):
     """
     Function check if current date is within the active date range
@@ -36,17 +37,18 @@ def date_check(active_date_range):
     except Exception as e:
         msg = f"Active date range conversion failed: {e}"
         logger.error(msg)
-        return(False, msg)
+        return (False, msg)
     else:
         if active_date_start <= current_month_and_day <= active_date_end:
             msg = "Date within active range"
             logger.debug(msg)
-            return(True, msg)
+            return (True, msg)
         else:
             msg = f"Date is not in active range. Active date range is set to: \
-                {active_date_start.strftime('%d %B')} - {active_date_end.strftime('%d %B')}"
+                {active_date_start.strftime('%d %B')} \
+                    - {active_date_end.strftime('%d %B')}"
             logger.debug(msg)
-            return(False, msg)
+            return (False, msg)
 
 
 def time_check(active_time_range):
@@ -81,14 +83,15 @@ def time_check(active_time_range):
     except Exception as e:
         msg = f"Active time range conversion failed: {e}"
         logger.error(msg)
-        return(False, msg)
+        return (False, msg)
     else:
         if active_time_start <= current_hour_and_minute <= active_time_end:
             msg = "Time within active range"
             logger.debug(msg)
-            return(True, msg)
+            return (True, msg)
         else:
             msg = f"Time is not in active range. Active time range is set to: \
-                {active_time_start.strftime('%H:%M')} - {active_time_end.strftime('%H:%M')}"
+                {active_time_start.strftime('%H:%M')} \
+                    - {active_time_end.strftime('%H:%M')}"
             logger.debug(msg)
-            return(False, msg)
+            return (False, msg)

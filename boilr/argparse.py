@@ -5,13 +5,15 @@ import sys
 import boilr.config as config
 import boilr.daemon as daemon
 
+
 class CustomArgumentParser(argparse.ArgumentParser):
     """Custom ArgumentParser to override default error handling"""
     def error(self, message):
         """Custom error handler"""
-        sys.stderr.write(f"Error: {message}\n\n")
-        self.print_help()
+        sys.stderr.write(f"Error: {message}\n")
+        sys.stderr.write("Use boilr -h to show further instructions\n")
         sys.exit(2)
+
 
 def setup_parser():
     """Setup the argument parser with subcommands and options"""
@@ -26,7 +28,7 @@ def setup_parser():
         '-v',
         '--verbose',
         action='store_true',
-        help='increase verbosity', # (default: %(default)s)
+        help='increase verbosity',  # (default: %(default)s)
         required=False
     )
 
@@ -60,5 +62,6 @@ def setup_parser():
     sp_manual.set_defaults(callback=daemon.daemon_manual)
 
     return custom_parser
+
 
 parser = setup_parser()

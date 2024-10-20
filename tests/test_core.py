@@ -5,7 +5,8 @@ import threading
 import logging
 from boilr.core import MainCtrl, app_thread
 
-logger = logging.getLogger(__name__) # Mocks logger to avoid actual logging during tests
+logger = logging.getLogger(__name__)
+
 
 class TestMainCtrl(unittest.TestCase):
     """Test class for MainCtrl"""
@@ -44,9 +45,12 @@ class TestAppThread(unittest.TestCase):
 
         # Run the app_thread for a short time
         with patch('boilr.core.logger') as mock_logger:
-            thread = threading.Thread(target=app_thread, args=(thread_stop_event, mainctrl))
+            thread = threading.Thread(
+                target=app_thread,
+                args=(thread_stop_event, mainctrl)
+            )
             thread.start()
-            thread_stop_event.set() # Stop the thread
+            thread_stop_event.set()  # Stop the thread
             thread.join()
 
             mock_app_run.assert_called()  # Check if app.run() was called
@@ -61,29 +65,40 @@ class TestAppThread(unittest.TestCase):
         mainctrl = MainCtrl(thread_continue=True)
 
         with patch('boilr.core.logger') as mock_logger:
-            thread = threading.Thread(target=app_thread, args=(thread_stop_event, mainctrl))
+            thread = threading.Thread(
+                target=app_thread,
+                args=(thread_stop_event, mainctrl)
+            )
             thread.start()
-            thread_stop_event.set() # Stop the thread
+            thread_stop_event.set()  # Stop the thread
             thread.join()
 
             mock_logger.debug.assert_any_call("Stopping app thread")
 
     @patch('boilr.app.run')
     @patch('boilr.config.SystemConfig')
-    def test_app_thread_stops_when_thread_continue_is_false(self, mock_config, mock_app_run):
+    def test_app_thread_stops_when_thread_continue_is_false(
+        self,
+        mock_config,
+        mock_app_run
+    ):
         """Test app_thread stops when thread_continue is set to False"""
         mock_config.interval = 0.1
         thread_stop_event = threading.Event()
         mainctrl = MainCtrl(thread_continue=False)
 
         with patch('boilr.core.logger') as mock_logger:
-            thread = threading.Thread(target=app_thread, args=(thread_stop_event, mainctrl))
+            thread = threading.Thread(
+                target=app_thread,
+                args=(thread_stop_event, mainctrl)
+            )
             thread.start()
-            thread_stop_event.set() # Stop the thread
+            thread_stop_event.set()  # Stop the thread
             thread.join()
 
-            mock_app_run.assert_not_called()  # Ensure app.run() was never called
+            mock_app_run.assert_not_called()  # app.run() was never called
             mock_logger.debug.assert_any_call("Stopping app thread")
+
 
 if __name__ == '__main__':
     unittest.main()

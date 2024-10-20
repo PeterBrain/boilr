@@ -3,56 +3,60 @@ import os
 import logging
 import yaml
 
-from boilr._version import version as __version__
+from boilr import __version__
 
 logger = logging.getLogger(__name__)
 
+
 class SystemConfig():
     """System configuration class"""
-    prog_name = "boilr" # program name
-    working_directory = "/var/log/" + prog_name #"/var/lib/boilr/"
-    logpath = os.path.join(working_directory, prog_name + ".log") #"/var/log/boilr/boilr.log"
-    pidpath = os.path.join("/var/run/", prog_name + ".pid") #"/var/run/boilr.pid"
+    prog_name = "boilr"  # program name
+    working_directory = "/var/log/" + prog_name  # "/var/lib/boilr/"
+    logpath = os.path.join(working_directory, prog_name + ".log")  # "/var/log/boilr/boilr.log"
+    pidpath = os.path.join("/var/run/", prog_name + ".pid")  # "/var/run/boilr.pid"
     chroot_dir = None
     logging_date_format = '%Y-%m-%dT%H:%M:%S'
     logging_format = '[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s'
     default_config_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config.yaml")
     config_file = os.getenv("BOILR_CONFIG_PATH", default_config_file)
 
-    interval = 10 # check fronius api every x seconds
-    start_timeout = 120 # min time between contactor state change in seconds
-    moving_median_list_size = 5 # size of the array for past request values
-    charge_threshold = 85 # min battery state of charge in %
-    ppv_tolerance = 100 # tolerance pv production in W
-    heater_power = 2600 # power of the heating element in W (for power availability calculation)
+    interval = 10  # check fronius api every x seconds
+    start_timeout = 120  # min time between contactor state change in seconds
+    moving_median_list_size = 5  # size of the array for past request values
+    charge_threshold = 85  # min battery state of charge in %
+    ppv_tolerance = 100  # tolerance pv production in W
+    heater_power = 2600  # power of the heating element in W (for power availability calculation)
 
-    active_date_range = ["01-01", "31-12"] # (day-month) ([start, end])
+    active_date_range = ["01-01", "31-12"]  # (day-month) ([start, end])
     # e.g.: may to oct -> ["01-05", "31-10"]
-    active_time_range = ["00:00", "23:59"] # (hour:minute) ([start, end])
+    active_time_range = ["00:00", "23:59"]  # (hour:minute) ([start, end])
     # e.g.: 10am to 5pm -> ["10:00", "17:00"]
     # boilr is active after charge_threshold is exceeded
     # boilr is inactive before the battery is discharged
 
+
 class RpiConfig():
     """GPIO configuration class"""
-    rpi_channel_relay_out = 17 # board number 11
-    rpi_channel_relay_in = 27 # board number 13
+    rpi_channel_relay_out = 17  # board number 11
+    rpi_channel_relay_in = 27  # board number 13
+
 
 class EndpointConfig():
     """Endpoint configuration class"""
-    request_timeout = 5 # timeout for requests in seconds
-    max_retries = 3 # maximum retries for requests
-    scheme = "http://" # scheme
-    ip = "example.local" # domain/ip address of the inverter
-    api = "/solar_api/v1" # api version (inverter specific)
-        # check with this URI: http://<ip-address>/solar_api/GetAPIVersion.cgi
-    powerflow = "/GetPowerFlowRealtimeData.fcgi" # resource
+    request_timeout = 5  # timeout for requests in seconds
+    max_retries = 3  # maximum retries for requests
+    scheme = "http://"  # scheme
+    ip = "example.local"  # domain/ip address of the inverter
+    api = "/solar_api/v1"  # api version (inverter specific)
+    # check with this URI: http://<ip-address>/solar_api/GetAPIVersion.cgi
+    powerflow = "/GetPowerFlowRealtimeData.fcgi"  # resource
+
 
 class MqttConfig():
     """MQTT broker configuration class"""
-    broker_ip = "localhost" # ip address of the mqtt broker
-    broker_port = 1883 # port of the broker
-    topic = "boilr" # root mqtt topic
+    broker_ip = "localhost"  # ip address of the mqtt broker
+    broker_port = 1883  # port of the broker
+    topic = "boilr"  # root mqtt topic
 
 
 def initialize():
@@ -60,6 +64,7 @@ def initialize():
     logger.info("%s version: %s", SystemConfig.prog_name, __version__)
     logger.info("Config initialized with log path: %s", SystemConfig.logpath)
     import_config()
+
 
 def import_config():
     """
@@ -81,7 +86,10 @@ def import_config():
         logger.info("Continue with defaults")
 
     except Exception as e_general:
-        logger.error("Unrecoverable error while importing user configuration: %s", e_general)
+        logger.error(
+            "Unrecoverable error while importing user configuration: %s",
+            e_general
+        )
         logger.info("Continue with defaults")
 
     else:

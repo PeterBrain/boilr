@@ -10,9 +10,9 @@ from daemon import pidfile
 import boilr.logger as logg
 import boilr.config as config
 import boilr.core as core
-#import boilr.app as app
 
 logger = logging.getLogger(__name__)
+
 
 def is_verbose(args):
     """
@@ -39,12 +39,19 @@ def daemon_start(args=None):
     """
     is_verbose(args)
 
-    logger.info("Attempt to start daemon with pid file: %s", config.SystemConfig.pidpath)
+    logger.info(
+        "Attempt to start daemon with pid file: %s",
+        config.SystemConfig.pidpath
+    )
 
-    config.initialize() # import & initialize user config
+    config.initialize()  # import & initialize user config
 
     if core.mainctrl.verbose:
-        logger.info("Starting %s with ARGS: %s", config.SystemConfig.prog_name, args)
+        logger.info(
+            "Starting %s with ARGS: %s",
+            config.SystemConfig.prog_name,
+            args
+        )
     else:
         logger.info("Starting %s...", config.SystemConfig.prog_name)
 
@@ -54,8 +61,8 @@ def daemon_start(args=None):
         logger.debug("%s (according to %s)", msg, config.SystemConfig.pidpath)
         sys.exit(1)
     else:
-        daemon = init_daemon()
-        with daemon:
+        daemon_context = init_daemon()
+        with daemon_context:
             core.main_thread(args, core.mainctrl)
 
 
@@ -77,19 +84,23 @@ def daemon_stop(args=None):
     is_verbose(args)
 
     if core.mainctrl.verbose:
-        logger.info("Stopping %s with ARGS: %s", config.SystemConfig.prog_name, args)
+        logger.info(
+            "Stopping %s with ARGS: %s",
+            config.SystemConfig.prog_name,
+            args
+        )
     else:
         logger.info("Stopping %s...", config.SystemConfig.prog_name)
 
     if os.path.exists(config.SystemConfig.pidpath):
         with open(config.SystemConfig.pidpath, "r", encoding="utf-8") as pid:
             try:
-                os.kill(int(pid.readline()), signal.SIGINT) # kill process via DaemonContext
+                os.kill(int(pid.readline()), signal.SIGINT)  # kill process
 
-                wait="Stopping.."
+                wait = "Stopping.."
                 while os.path.exists(config.SystemConfig.pidpath):
                     if core.mainctrl.verbose:
-                        print(wait, sep='', end ='\r', flush=True)
+                        print(wait, sep='', end='\r', flush=True)
                         time.sleep(1)
                         wait += "."
 
@@ -106,7 +117,10 @@ def daemon_stop(args=None):
                     config.SystemConfig.prog_name,
                     ose
                 )
-                logger.warning("Attempting process %s cleanup", config.SystemConfig.prog_name)
+                logger.warning(
+                    "Attempting process %s cleanup",
+                    config.SystemConfig.prog_name
+                )
                 os.remove(config.SystemConfig.pidpath)
                 sys.exit(1)
             except Exception as e_general:
@@ -139,7 +153,10 @@ def daemon_restart(args):
     logger.debug("Waiting for %s to stop", config.SystemConfig.prog_name)
 
     if daemon_stop():
-        logger.debug("%s stopped. Attempting to start again", config.SystemConfig.prog_name)
+        logger.debug(
+            "%s stopped. Attempting to start again",
+            config.SystemConfig.prog_name
+        )
         daemon_start(args)
 
 
@@ -155,7 +172,7 @@ def daemon_run(args):
     logg.console_handler.setLevel(logging.WARN)
     is_verbose(args)
 
-    config.initialize() # import & initialize user config
+    config.initialize()  # import & initialize user config
 
     logger.info("Running %s in debug mode", config.SystemConfig.prog_name)
     core.main_thread(args, core.mainctrl)
@@ -165,7 +182,8 @@ def daemon_status(args):
     """
     Printing status of daemon with args
 
-    Due to memory separation in daemon, status variables from Boilr class are disabled.
+    Due to memory separation in daemon,
+    status variables from Boilr class are disabled.
 
     Parameters
     ----------
@@ -175,7 +193,11 @@ def daemon_status(args):
     is_verbose(args)
 
     if core.mainctrl.verbose:
-        logger.info("%s status with ARGS: %s", config.SystemConfig.prog_name, args)
+        logger.info(
+            "%s status with ARGS: %s",
+            config.SystemConfig.prog_name,
+            args
+        )
     else:
         logger.debug("%s Status: %s", config.SystemConfig.prog_name, args)
 
@@ -192,26 +214,25 @@ def daemon_status(args):
         msg += f"\nConf file: {config.SystemConfig.config_file}"
 
         # Status variables disabled due to memory separation in daemon
-        # suggested fix: use multiprocessing.Manager for shared state with shared_dict
+        # suggestion: multiprocessing.Manager for shared state (shared_dict)
+        '''boilr = app.boilr
+        (status, status_timestamp) = boilr.status
+        (status_prev, status_timestamp_prev) = boilr.status
 
-        #boilr = app.boilr
-        #(status, status_timestamp) = boilr.status
-        #(status_prev, status_timestamp_prev) = boilr.status
+        msg += f"\nContactor status: {status}"
+        msg += f"\nContactor last changed: {status_timestamp}"
+        msg += f"\nContactor {'closed' if status else 'open'} for " \
+            f"{round((status_timestamp - status_timestamp_prev).total_seconds())} " \
+            f"seconds, Previously {status_prev}"
 
-        #msg += f"\nContactor status: {status}"
-        #msg += f"\nContactor last changed: {status_timestamp}"
-        #msg += f"\nContactor {'closed' if status else 'open'} for " \
-        #    f"{round((status_timestamp - status_timestamp_prev).total_seconds())} " \
-        #    f"seconds, Previously {status_prev}"
+        logger.info("Power load deque: %s", list(boilr.pload))
+        logger.info("Power pv deque: %s", list(boilr.ppv))
 
-        #logger.info("Power load deque: %s", list(boilr.pload))
-        #logger.info("Power pv deque: %s", list(boilr.ppv))
+        latest_load = boilr.pload[-1] if boilr.pload else 0
+        msg += f"\nPower load: {latest_load} W, Median: {boilr.pload_median} W"
 
-        #latest_load = boilr.pload[-1] if boilr.pload else 0
-        #msg += f"\nPower load: {latest_load} W, Median: {boilr.pload_median} W"
-
-        #latest_pv = boilr.ppv[-1] if boilr.ppv else 0
-        #msg += f"\nPower pv: {latest_pv} W, Median: {boilr.ppv_median} W"
+        latest_pv = boilr.ppv[-1] if boilr.ppv else 0
+        msg += f"\nPower pv: {latest_pv} W, Median: {boilr.ppv_median} W" '''
 
         print(msg)
     else:
@@ -234,7 +255,11 @@ def daemon_manual(args):
     """
     is_verbose(args)
 
-    logger.debug("%s Manual mode: %s", config.SystemConfig.prog_name, args.manual)
+    logger.debug(
+        "%s Manual mode: %s",
+        config.SystemConfig.prog_name,
+        args.manual
+    )
     core.mainctrl.thread_continue = False
     core.main_thread(args, core.mainctrl)
 
@@ -247,8 +272,8 @@ def init_daemon():
     -------
     DaemonContext
     """
-    daemonContext = daemon.DaemonContext(
-        files_preserve=[ # preserve logging handler
+    daemon_context = daemon.DaemonContext(
+        files_preserve=[  # preserve logging handler
             logg.file_handler.stream,
             logg.console_handler.stream,
         ],
@@ -261,12 +286,12 @@ def init_daemon():
             signal.SIGTERM: core.mainctrl.main_thread_stop,
             signal.SIGTSTP: core.mainctrl.main_thread_stop,
             signal.SIGINT: core.mainctrl.main_thread_stop,
-            #signal.SIGKILL: daemon_stop,
+            # signal.SIGKILL: daemon_stop,
             signal.SIGUSR1: daemon_status,
             signal.SIGUSR2: daemon_status,
         },
-        uid=None, #1001
-        gid=None, #777
+        uid=None,
+        gid=None,
         initgroups=False,
         prevent_core=True,
         stdin=sys.stdin,
@@ -274,4 +299,4 @@ def init_daemon():
         stderr=sys.stderr
     )
 
-    return daemonContext
+    return daemon_context

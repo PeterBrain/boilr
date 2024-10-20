@@ -9,16 +9,19 @@ import boilr.rpi_gpio as rpi_gpio
 logger = logging.getLogger(__name__)
 thread_event = threading.Event()
 
+
 class MainCtrl:
     """Main control class for thread control"""
     def __init__(self, thread_continue=None, verbose=None, manual=None):
-        self.thread_continue = thread_continue if thread_continue is not None else True
+        self.thread_continue = \
+            (thread_continue if thread_continue is not None else True)
         self.verbose = verbose if verbose is not None else False
         self.manual = manual if manual is not None else False
 
     def main_thread_stop(self, signum=None, frame=None):
         """Stopping main thread"""
         self.thread_continue = False
+
 
 mainctrl = MainCtrl()
 
@@ -67,7 +70,10 @@ def main_thread(args, mainctrl_instance):
         mainctrl_instance.manual = True
         app.manual_override(args.manual[0])
 
-    thread = threading.Thread(target=app_thread, args=(thread_event, mainctrl_instance,))
+    thread = threading.Thread(
+        target=app_thread,
+        args=(thread_event, mainctrl_instance,)
+    )
     thread.daemon = True
     thread.start()
 

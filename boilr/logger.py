@@ -9,24 +9,25 @@ import boilr.config as config
 file_handler = None
 console_handler = None
 
+
 def setup_logging(args):
     """Setup logging config with handler"""
     # pylint: disable=global-statement
     global file_handler, console_handler
 
-    logger = logging.getLogger() # root logger
-    logger.setLevel(logging.DEBUG) # root logging level
+    logger = logging.getLogger()  # root logger
+    logger.setLevel(logging.DEBUG)  # root logging level
 
     try:
         log_dir = os.path.dirname(config.SystemConfig.logpath)
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
-            sys.stderr.write(f"Created log directory\n")
+            sys.stderr.write(f"Created log directory: {log_dir}\n")
 
         # Timed rotating file handler
         file_handler = logging.handlers.TimedRotatingFileHandler(
             config.SystemConfig.logpath,
-            when='W0', # Rotate weekly
+            when='W0',  # rotate weekly
             interval=1,
             backupCount=12
         )
@@ -49,8 +50,8 @@ def setup_logging(args):
         console_handler.setFormatter(console_formatter)
 
         # Add handlers to the root logger
-        logger.addHandler(file_handler) # log to file
-        logger.addHandler(console_handler) # log to console
+        logger.addHandler(file_handler)  # log to file
+        logger.addHandler(console_handler)  # log to console
 
     except PermissionError as e_permission:
         sys.stderr.write(f"PermissionError: {e_permission}\n")

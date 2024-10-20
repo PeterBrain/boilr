@@ -4,6 +4,7 @@ import logging
 import boilr.logger as logg
 import boilr.argparse as argparse
 
+
 def main():
     """Entry point"""
     args = argparse.parser.parse_args()
@@ -18,6 +19,7 @@ def main():
     else:
         logger.debug("No callback found, printing help")
         argparse.parser.print_help()
+
 
 if __name__ == '__main__':
     main()
