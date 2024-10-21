@@ -7,8 +7,10 @@ services:
     build: .
     restart: unless-stopped
     privileged: true
+    #environment:
+    #  - BOILR_CONFIG_PATH=/etc/boilr/config.yaml # set custom configuration path
     volumes:
-      - ./config.yaml:/config.yaml
+      - ./config.yaml:/etc/boilr/config.yaml
     devices:
       - /dev/gpiomem:/dev/gpiomem
     networks:

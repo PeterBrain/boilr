@@ -11,14 +11,14 @@ logger = logging.getLogger(__name__)
 class SystemConfig():
     """System configuration class"""
     prog_name = "boilr"  # program name
-    working_directory = "/var/log/" + prog_name  # "/var/lib/boilr/"
+    working_directory = "/var/log/" + prog_name  # "/var/log/boilr"
     logpath = os.path.join(working_directory, prog_name + ".log")  # "/var/log/boilr/boilr.log"
-    pidpath = os.path.join("/var/run/", prog_name + ".pid")  # "/var/run/boilr.pid"
+    pidpath = os.path.join("/var/run", prog_name + ".pid")  # "/var/run/boilr.pid"
     chroot_dir = None
     logging_date_format = '%Y-%m-%dT%H:%M:%S'
     logging_format = '[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s'
-    default_config_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config.yaml")
-    config_file = os.getenv("BOILR_CONFIG_PATH", default_config_file)
+    default_config_file = os.path.join("/etc", prog_name, "config.yaml")  # "/etc/boilr/config.yaml"
+    config_file = default_config_file
 
     interval = 10  # check fronius api every x seconds
     start_timeout = 120  # min time between contactor state change in seconds
@@ -59,10 +59,32 @@ class MqttConfig():
     topic = "boilr"  # root mqtt topic
 
 
-def initialize():
-    """Initialize configuration"""
+def initialize(args):
+    """
+    Initialize configuration
+
+    Parameters
+    ----------
+    args : obj
+        Command line arguments
+    """
     logger.info("%s version: %s", SystemConfig.prog_name, __version__)
-    logger.info("Config initialized with log path: %s", SystemConfig.logpath)
+    logger.debug("Config initialized with log path: %s", SystemConfig.logpath)
+
+    if args.config:
+        SystemConfig.config_file = args.config
+        logger.debug("Command line config: %s", args.config)
+    elif os.getenv("BOILR_CONFIG_PATH"):
+        # logger.debug("Environment variables: %s", os.environ)
+        config_path = os.getenv("BOILR_CONFIG_PATH")
+        logger.debug("Found BOILR_CONFIG_PATH in env: %s", config_path)
+        SystemConfig.config_file = config_path
+    else:
+        logger.debug(
+            "Neither command line config nor environment variable is passed"
+        )
+
+    logger.info("Using configuration file: %s", SystemConfig.config_file)
     import_config()
 
 
@@ -77,53 +99,73 @@ def import_config():
         General exception
     """
     try:
+        if not os.path.exists(SystemConfig.config_file):
+            raise FileNotFoundError(f"Configuration file not found at {SystemConfig.config_file}")
+
         with open(SystemConfig.config_file, "r", encoding="utf-8") as yaml_file:
             user_config = yaml.safe_load(yaml_file)
-            logger.debug("Parsed configuration file: %s", yaml_file.name)
+            logger.debug("Parsed configuration file")
+            apply_config(user_config)
 
     except FileNotFoundError as file_not_found:
-        logger.error("File not found: %s", file_not_found)
-        logger.info("Continue with defaults")
+        logger.error("Configuration file not found: %s", file_not_found)
+        logger.info("Continuing with default settings")
 
-    except Exception as e_general:
-        logger.error(
-            "Unrecoverable error while importing user configuration: %s",
-            e_general
-        )
-        logger.info("Continue with defaults")
+    except yaml.YAMLError as yaml_error:
+        logger.error("Error parsing YAML configuration: %s", yaml_error)
+        logger.info("Please check the syntax of your configuration file")
+        logger.info("Continuing with default settings")
 
-    else:
-        logger.debug("Applying configuration")
+    except PermissionError as permission_error:
+        logger.error("Permission denied for configuration file: %s", permission_error)
+        logger.info("Ensure the application has access to the configuration file")
+        logger.info("Continuing with default settings")
 
-        app_config = user_config["boilr"]
-        rpi_config = user_config["rpi"]
-        rest_config = user_config["endpoint"]
-        mqtt_config = user_config["mqtt"]
+    except Exception as general_error:
+        logger.error("Unexpected error loading configuration: %s", general_error)
+        logger.info("Continuing with default settings")
 
-        SystemConfig.interval = app_config['interval']
-        SystemConfig.start_timeout = app_config['start_timeout']
-        SystemConfig.moving_median_list_size = app_config['moving_median_list_size']
-        SystemConfig.charge_threshold = app_config['charge_threshold']
-        SystemConfig.ppv_tolerance = app_config['ppv_tolerance']
-        SystemConfig.heater_power = app_config['heater_power']
-        SystemConfig.active_date_range = app_config['active_date_range']
-        SystemConfig.active_time_range = app_config['active_time_range']
 
-        RpiConfig.rpi_channel_relay_out = rpi_config['rpi_channel_relay_out']
-        RpiConfig.rpi_channel_relay_in = rpi_config['rpi_channel_relay_in']
+def apply_config(user_config):
+    """
+    Apply configuration to system settings
 
-        EndpointConfig.request_timeout = rest_config['request_timeout']
-        EndpointConfig.max_retries = rest_config['max_retries']
-        EndpointConfig.scheme = rest_config['scheme']
-        EndpointConfig.ip = rest_config['ip']
-        EndpointConfig.api = rest_config['api']
-        EndpointConfig.powerflow = rest_config['powerflow']
+    Parameters
+    ----------
+    user_config : obj
+    """
+    try:
+        app_config = user_config.get("boilr", {})
+        rpi_config = user_config.get("rpi", {})
+        rest_config = user_config.get("endpoint", {})
+        mqtt_config = user_config.get("mqtt", {})
 
-        MqttConfig.broker_ip = mqtt_config['broker_ip']
-        MqttConfig.broker_port = mqtt_config['broker_port']
-        MqttConfig.topic = mqtt_config['topic']
+        SystemConfig.interval = app_config.get('interval', SystemConfig.interval)
+        SystemConfig.start_timeout = app_config.get('start_timeout', SystemConfig.start_timeout)
+        SystemConfig.moving_median_list_size = app_config.get('moving_median_list_size', SystemConfig.moving_median_list_size)
+        SystemConfig.charge_threshold = app_config.get('charge_threshold', SystemConfig.charge_threshold)
+        SystemConfig.ppv_tolerance = app_config.get('ppv_tolerance', SystemConfig.ppv_tolerance)
+        SystemConfig.heater_power = app_config.get('heater_power', SystemConfig.heater_power)
+        SystemConfig.active_date_range = app_config.get('active_date_range', SystemConfig.active_date_range)
+        SystemConfig.active_time_range = app_config.get('active_time_range', SystemConfig.active_time_range)
 
-        logger.debug("Finished applying configuration")
+        RpiConfig.rpi_channel_relay_out = rpi_config.get('rpi_channel_relay_out', RpiConfig.rpi_channel_relay_out)
+        RpiConfig.rpi_channel_relay_in = rpi_config.get('rpi_channel_relay_in', RpiConfig.rpi_channel_relay_in)
 
-    finally:
-        pass
+        EndpointConfig.request_timeout = rest_config.get('request_timeout', EndpointConfig.request_timeout)
+        EndpointConfig.max_retries = rest_config.get('max_retries', EndpointConfig.max_retries)
+        EndpointConfig.scheme = rest_config.get('scheme', EndpointConfig.scheme)
+        EndpointConfig.ip = rest_config.get('ip', EndpointConfig.ip)
+        EndpointConfig.api = rest_config.get('api', EndpointConfig.api)
+        EndpointConfig.powerflow = rest_config.get('powerflow', EndpointConfig.powerflow)
+
+        MqttConfig.broker_ip = mqtt_config.get('broker_ip', MqttConfig.broker_ip)
+        MqttConfig.broker_port = mqtt_config.get('broker_port', MqttConfig.broker_port)
+        MqttConfig.topic = mqtt_config.get('topic', MqttConfig.topic)
+
+        logger.debug("Configuration applied successfully")
+
+    except KeyError as key_error:
+        logger.warning("Missing key in configuration file: %s", key_error)
+        logger.info("Ensure all required keys are present in the configuration")
+        logger.info("Continuing with partial defaults")

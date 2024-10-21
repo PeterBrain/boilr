@@ -38,16 +38,16 @@ def daemon_start(args=None):
         Command line arguments (default is None)
     """
     is_verbose(args)
+    config.initialize(args)
 
-    logger.info(
+    logger.info("Starting %s service", config.SystemConfig.prog_name)
+    logger.debug(
         "Attempt to start daemon with pid file: %s",
         config.SystemConfig.pidpath
     )
 
-    config.initialize()  # import & initialize user config
-
     if core.mainctrl.verbose:
-        logger.info(
+        logger.debug(
             "Starting %s with ARGS: %s",
             config.SystemConfig.prog_name,
             args
@@ -171,10 +171,12 @@ def daemon_run(args):
     """
     logg.console_handler.setLevel(logging.WARN)
     is_verbose(args)
+    config.initialize(args)
 
-    config.initialize()  # import & initialize user config
-
-    logger.info("Running %s in debug mode", config.SystemConfig.prog_name)
+    logger.info(
+        "Starting %s in interactive mode",
+        config.SystemConfig.prog_name
+    )
     core.main_thread(args, core.mainctrl)
 
 
@@ -202,7 +204,7 @@ def daemon_status(args):
         logger.debug("%s Status: %s", config.SystemConfig.prog_name, args)
 
     if os.path.exists(config.SystemConfig.pidpath):
-        msg = f"{config.SystemConfig.prog_name} is running"
+        msg = f"{config.SystemConfig.prog_name} service is running"
         logger.debug(msg)
 
         with open(config.SystemConfig.pidpath, "r", encoding="utf-8") as pid:
@@ -236,7 +238,7 @@ def daemon_status(args):
 
         print(msg)
     else:
-        msg = f"{config.SystemConfig.prog_name} is not running"
+        msg = f"{config.SystemConfig.prog_name} service is not running"
         print(msg)
         logger.debug(msg)
 
@@ -254,6 +256,7 @@ def daemon_manual(args):
         Command line arguments
     """
     is_verbose(args)
+    config.initialize(args)
 
     logger.debug(
         "%s Manual mode: %s",

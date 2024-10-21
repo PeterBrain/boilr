@@ -25,10 +25,18 @@ def setup_parser():
     )
 
     custom_parser.add_argument(
+        '-c',
+        '--config',
+        help='Path to the configuration file.',
+        required=False,
+        # default='/etc/boilr/config.yaml'  # prefills config argument
+    )
+
+    custom_parser.add_argument(
         '-v',
         '--verbose',
         action='store_true',
-        help='increase verbosity',  # (default: %(default)s)
+        help='Increase verbosity',  # (default: %(default)s)
         required=False
     )
 
@@ -36,7 +44,7 @@ def setup_parser():
         title='commands',
         dest='command',
         description='Choose between the following positional arguments',
-        help=""
+        help=''
     )
 
     sp_start = subparsers.add_parser(name='start', help='Start %(prog)s service')

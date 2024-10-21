@@ -40,11 +40,11 @@ def app_thread(thread_stop_event, mainctrl_instance):
     logger.debug("Starting app thread")
 
     while mainctrl_instance.thread_continue and not thread_stop_event.is_set():
-        if mainctrl_instance.verbose:
-            logger.debug("Continuing thread...")
-
         app.run()
         thread_stop_event.wait(config.SystemConfig.interval)
+
+        if mainctrl_instance.verbose:
+            logger.debug("Continuing thread...")
 
     logger.debug("Stopping app thread")
 
