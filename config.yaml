@@ -1,32 +1,64 @@
 ---
 boilr:
-  interval: 10 # check api every x seconds
-  start_timeout: 120 # min time between contactor state change in seconds
-  moving_median_list_size: 5 # size of the array for past request values
-  charge_threshold: 85 # min battery state of charge in %
-  ppv_tolerance: 100 # tolerance pv production in W
-  heater_power: 2600 # max power of the heating element in W (for power availability calculation)
-  active_date_range: ["01-01", "31-12"] # (day-month) ([start, end])
-    # e.g.: may to oct -> ["01-05", "31-10"]
-  active_time_range: ["00:00", "23:59"] # (hour:minute) ([start, end])
-    # e.g.: 10am to 5pm -> ["10:00", "17:00"]
-    # boilr is active after charge_threshold is exceeded
+  interval: 10
+    # api checking interval in seconds
+  start_timeout: 120
+    # minimum time between contactor state changes in seconds
+    # reduces the toggling of the contactor
+    # opens the contactor immediately if there is insufficient power available
+    # delays the closing of the contactor if the time delta between open and closed is below this value
+  moving_median_list_size: 5
+    # size of the array for past query values
+    # smooths fluctuations in the available PV power to prevent the contactor from switching too frequently
+  charge_threshold: 85
+    # minimum state of charge of the battery in %
+    # boilr is active after charge_threshold has been exceeded
     # boilr is inactive before the battery is discharged
+    # if no battery is present, boilr assumes the state of charge = 100
+  ppv_tolerance: 100
+    # tolerance of PV production in W
+    # included in the calculation of power availability
+  heater_power: 2600
+    # maximum power of the heating element in W
+    # important for calculating the power availability
+  active_date_range: ["01-01", "31-12"]
+    # (day-month) ([start, end])
+    # e.g.: may to oct -> ["01-05", "31-10"]
+  active_time_range: ["00:00", "23:59"]
+    # (hour:minute) ([start, end])
+    # e.g.: 10am to 5pm -> ["10:00", "17:00"]
 
 rpi:
-  rpi_channel_relay_out: 17 # board number 11
-  rpi_channel_relay_in: 27 # board number 13
+  # look at the schematics or pinout of your board
+  # https://www.raspberrypi.com/documentation/computers/raspberry-pi.html
+  rpi_channel_relay_out: 17
+    # to set the relay state
+    # 1B - board number 11
+  rpi_channel_relay_in: 27
+    # to read the relay state - currently not used in code
+    # 1B - board number 13
 
 endpoint:
-  request_timeout: 5 # timeout for requests in seconds
-  max_retries: 3 # maximum retries for requests
-  scheme: "http://" # scheme
-  ip: "10.0.10.90" # ip address of the inverter
-  api: "/solar_api/v1" # api version (inverter specific)
+  # Fronius PV inverter
+  request_timeout: 5
+    # timeout for requests in seconds
+  max_retries: 3
+    # maximum number of retries for failed requests
+  scheme: "http://"
+    # request scheme for api request
+  host: "10.0.10.90"
+    # domain/ip-address of the inverter (incl. port - if necessary)
+  api: "/solar_api/v1"
+    # api version (inverter specific)
     # check with this URI: http://<ip-address>/solar_api/GetAPIVersion.cgi
-  powerflow: "/GetPowerFlowRealtimeData.fcgi" # resource
+  resource: "/GetPowerFlowRealtimeData.fcgi"
+    # resource
 
 mqtt:
-  broker_ip: "10.0.10.60" # ip address of the mqtt broker
-  broker_port: 1883 # port of the broker
-  topic: "boilr" # root mqtt topic
+  broker_host: "10.0.10.60"
+    # domain/ip-address of the mqtt broker
+  broker_port: 1883
+    # port of the broker
+  topic: "boilr"
+    # root mqtt topic
+    # contactor state is published with <topic>/contactor/state

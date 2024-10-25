@@ -1,11 +1,6 @@
-certifi==2024.8.30
-charset-normalizer==3.4.0
-docutils==0.21.2
-idna==3.10
-lockfile==0.12.2
-paho-mqtt==2.1.0
-python-daemon==3.0.1
-PyYAML==6.0.2
-requests==2.32.3
-RPi.GPIO==0.7.1
-urllib3==2.2.3
+paho-mqtt>=2.1
+python-daemon>=3.0
+requests>=2.32
+RPi.GPIO>=0.7.1
+PyYAML>=6.0
+urllib3>=2.2
