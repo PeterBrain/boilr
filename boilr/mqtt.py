@@ -30,11 +30,12 @@ def on_message(client, userdata, msg):
 
 client.on_message = on_message
 
+
 def publish_mqtt(topic, message):
     """MQTT publish"""
     try:
         client.connect(
-            config.MqttConfig.broker_ip,
+            config.MqttConfig.broker_host,
             config.MqttConfig.broker_port,
             60
         )
@@ -44,16 +45,17 @@ def publish_mqtt(topic, message):
     except Exception as e:
         logger.error("Failed to publish MQTT message: %s", e)
 
+
 def subscribe_mqtt(topic):
     """MQTT subscribe - DEV"""
     try:
         client.connect(
-            config.MqttConfig.broker_ip,
+            config.MqttConfig.broker_host,
             config.MqttConfig.broker_port,
             60
         )
         client.subscribe(config.MqttConfig.topic + '/' + topic)
-        client.loop_start() # loop to process messages in the background
+        client.loop_start()  # loop to process messages in the background
         logger.debug("Subscribed to topic: %s", topic)
     except Exception as e:
         logger.error("Failed to subscribe to MQTT topic: %s", e)

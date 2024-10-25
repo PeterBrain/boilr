@@ -20,19 +20,15 @@ class SystemConfig():
     default_config_file = os.path.join("/etc", prog_name, "config.yaml")  # "/etc/boilr/config.yaml"
     config_file = default_config_file
 
-    interval = 10  # check fronius api every x seconds
-    start_timeout = 120  # min time between contactor state change in seconds
-    moving_median_list_size = 5  # size of the array for past request values
-    charge_threshold = 85  # min battery state of charge in %
-    ppv_tolerance = 100  # tolerance pv production in W
-    heater_power = 2600  # power of the heating element in W (for power availability calculation)
+    interval = 10  # api checking interval in seconds
+    start_timeout = 120  # minimum time between contactor state changes in seconds
+    moving_median_list_size = 5  # size of the array for past query values
+    charge_threshold = 85  # minimum state of charge of the battery in %
+    ppv_tolerance = 100  # tolerance of PV production in W
+    heater_power = 2600  # maximum power of the heating element in W
 
     active_date_range = ["01-01", "31-12"]  # (day-month) ([start, end])
-    # e.g.: may to oct -> ["01-05", "31-10"]
     active_time_range = ["00:00", "23:59"]  # (hour:minute) ([start, end])
-    # e.g.: 10am to 5pm -> ["10:00", "17:00"]
-    # boilr is active after charge_threshold is exceeded
-    # boilr is inactive before the battery is discharged
 
 
 class RpiConfig():
@@ -44,17 +40,17 @@ class RpiConfig():
 class EndpointConfig():
     """Endpoint configuration class"""
     request_timeout = 5  # timeout for requests in seconds
-    max_retries = 3  # maximum retries for requests
-    scheme = "http://"  # scheme
-    ip = "example.local"  # domain/ip address of the inverter
+    max_retries = 3  # maximum number of retries for failed requests
+    scheme = "http://"  # request scheme for api request
+    host = "example.local"  # domain/ip-address of the inverter
     api = "/solar_api/v1"  # api version (inverter specific)
     # check with this URI: http://<ip-address>/solar_api/GetAPIVersion.cgi
-    powerflow = "/GetPowerFlowRealtimeData.fcgi"  # resource
+    resource = "/GetPowerFlowRealtimeData.fcgi"  # resource
 
 
 class MqttConfig():
     """MQTT broker configuration class"""
-    broker_ip = "localhost"  # ip address of the mqtt broker
+    broker_host = "localhost"  # domain/ip-address of the mqtt broker
     broker_port = 1883  # port of the broker
     topic = "boilr"  # root mqtt topic
 
@@ -155,11 +151,11 @@ def apply_config(user_config):
         EndpointConfig.request_timeout = rest_config.get('request_timeout', EndpointConfig.request_timeout)
         EndpointConfig.max_retries = rest_config.get('max_retries', EndpointConfig.max_retries)
         EndpointConfig.scheme = rest_config.get('scheme', EndpointConfig.scheme)
-        EndpointConfig.ip = rest_config.get('ip', EndpointConfig.ip)
+        EndpointConfig.host = rest_config.get('host', EndpointConfig.host)
         EndpointConfig.api = rest_config.get('api', EndpointConfig.api)
-        EndpointConfig.powerflow = rest_config.get('powerflow', EndpointConfig.powerflow)
+        EndpointConfig.resource = rest_config.get('resource', EndpointConfig.resource)
 
-        MqttConfig.broker_ip = mqtt_config.get('broker_ip', MqttConfig.broker_ip)
+        MqttConfig.broker_host = mqtt_config.get('broker_host', MqttConfig.broker_host)
         MqttConfig.broker_port = mqtt_config.get('broker_port', MqttConfig.broker_port)
         MqttConfig.topic = mqtt_config.get('topic', MqttConfig.topic)
 

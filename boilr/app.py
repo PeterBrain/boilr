@@ -175,7 +175,7 @@ def run():
         else:
             pass
 
-    inverter_url = config.EndpointConfig.scheme + config.EndpointConfig.ip
+    inverter_url = config.EndpointConfig.scheme + config.EndpointConfig.host
     logger.debug("Gathering information from endpoint at: %s", inverter_url)
 
     # session object with retry functionality
@@ -194,7 +194,7 @@ def run():
         response_powerflow = session.get(
             inverter_url
             + config.EndpointConfig.api
-            + config.EndpointConfig.powerflow,
+            + config.EndpointConfig.resource,
             timeout=config.EndpointConfig.request_timeout
         )
     except (RequestsConnectionError, Timeout, TooManyRedirects,
@@ -208,7 +208,6 @@ def run():
         daemon.daemon_stop()
         return False
     else:
-        # check status code of the response
         if response_powerflow.status_code != 200:
             logger.error(
                 "Request returned status code: %s",
