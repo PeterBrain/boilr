@@ -3,7 +3,7 @@ name: Run tests and upload coverage
 on:
   workflow_dispatch:
 
-  push #:
+  push:
     #tags:
     #  - '*'
 
