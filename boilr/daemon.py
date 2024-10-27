@@ -217,24 +217,6 @@ def daemon_status(args):
 
         # Status variables disabled due to memory separation in daemon
         # suggestion: multiprocessing.Manager for shared state (shared_dict)
-        '''boilr = app.boilr
-        (status, status_timestamp) = boilr.status
-        (status_prev, status_timestamp_prev) = boilr.status
-
-        msg += f"\nContactor status: {status}"
-        msg += f"\nContactor last changed: {status_timestamp}"
-        msg += f"\nContactor {'closed' if status else 'open'} for " \
-            f"{round((status_timestamp - status_timestamp_prev).total_seconds())} " \
-            f"seconds, Previously {status_prev}"
-
-        logger.info("Power load deque: %s", list(boilr.pload))
-        logger.info("Power pv deque: %s", list(boilr.ppv))
-
-        latest_load = boilr.pload[-1] if boilr.pload else 0
-        msg += f"\nPower load: {latest_load} W, Median: {boilr.pload_median} W"
-
-        latest_pv = boilr.ppv[-1] if boilr.ppv else 0
-        msg += f"\nPower pv: {latest_pv} W, Median: {boilr.ppv_median} W" '''
 
         print(msg)
     else:

@@ -1,4 +1,4 @@
-'''tests for helper'''
+"""Tests for helper"""
 from datetime import datetime
 from unittest.mock import patch
 import pytest

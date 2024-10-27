@@ -1,4 +1,4 @@
-'''tests for core'''
+"""Tests for core"""
 import unittest
 from unittest.mock import patch
 import threading

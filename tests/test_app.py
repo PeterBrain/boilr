@@ -1,7 +1,7 @@
-'''tests for app'''
-from datetime import datetime
+"""Tests for app"""
+from datetime import datetime, timedelta
 from collections import deque
-from unittest.mock import patch
+from unittest.mock import patch, ANY
 import statistics
 import pytest
 from requests.exceptions import ConnectionError
@@ -34,11 +34,47 @@ def test_boilr_initialization():
     assert boilr.ppv.maxlen == config.SystemConfig.moving_median_list_size
 
 
-@patch('boilr.mqtt.publish_mqtt')
-def test_update_medians(mock_publish):
-    """Test updating medians"""
-    boilr = Boilr()
+@patch('boilr.app.publish_mqtt')
+def test_update_status(mock_publish, boilr_instance):
+    """Test updating status"""
+    result = boilr_instance.update_status(True)
 
+    assert result is True
+    # Verify boilr contact status
+    assert boilr_instance.status[0] is True
+    # Verify that publish_mqtt was called once with the following arguments
+    mock_publish.assert_called_once_with("contactor/state", True)
+
+
+@patch("boilr.app.datetime")
+@patch('boilr.app.publish_mqtt')
+def test_update_status_updates_timestamp(
+    mock_publish,
+    mock_datetime,
+    boilr_instance
+):
+    """Test that update_status updates timestamp correctly"""
+    initial_time = datetime(2024, 10, 27, 12, 0, 0)
+    later_time = initial_time + timedelta(hours=1)
+
+    mock_datetime.now.return_value = initial_time
+    boilr_instance.update_status(False)
+
+    # Verify boilr contact status with correct time
+    assert boilr_instance.status == (False, initial_time)
+
+    mock_datetime.now.return_value = later_time  # Mock time one hour later
+    boilr_instance.update_status(True)
+
+    # Verify boilr contact status with correct time
+    assert boilr_instance.status == (True, later_time)
+    # Verify that publish_mqtt was called twice with the following arguments
+    mock_publish.assert_called_with("contactor/state", True)
+    assert mock_publish.call_count == 2
+
+
+def test_update_medians():
+    """Test updating medians"""
     powerflow_pload = 50
     powerflow_ppv = 100
     result = boilr.update_medians(powerflow_pload, powerflow_ppv)
@@ -51,11 +87,14 @@ def test_update_medians_handles_error(mock_logger_error, boilr_instance):
     """Test update_medians gracefully handles errors during calculation"""
     result = boilr_instance.update_medians(None, 200)
 
+    mock_logger_error.assert_called_with(
+        "Error in median calculation: %s",
+        ANY
+    )
     assert result is False
 
 
-@patch('boilr.mqtt.publish_mqtt')
-def test_update_medians_calculation(mock_publish, boilr_instance):
+def test_update_medians_calculation(boilr_instance):
     """Test that median calculation works correctly with valid inputs"""
     powerflow_ploads = [10, 20, 30, 40, 50]
     powerflow_ppvs = [100, 150, 200, 250, 300]
@@ -63,13 +102,12 @@ def test_update_medians_calculation(mock_publish, boilr_instance):
     for pload, ppv in zip(powerflow_ploads, powerflow_ppvs):
         boilr_instance.update_medians(pload, ppv)
 
-    # Validate that the medians were calculated correctly
+    # Verify that the medians were calculated correctly
     assert boilr_instance.pload_median == statistics.median(powerflow_ploads)
     assert boilr_instance.ppv_median == statistics.median(powerflow_ppvs)
 
 
-@patch('boilr.mqtt.publish_mqtt')
-def test_update_medians_calculation_partial_data(mock_publish, boilr_instance):
+def test_update_medians_calculation_partial_data(boilr_instance):
     """Test update_medians with fewer than maxlen data points"""
     powerflow_ploads = [10, 20]
     powerflow_ppvs = [100, 150]
@@ -77,7 +115,7 @@ def test_update_medians_calculation_partial_data(mock_publish, boilr_instance):
     for pload, ppv in zip(powerflow_ploads, powerflow_ppvs):
         boilr_instance.update_medians(pload, ppv)
 
-    # Check if the medians are calculated correctly with partial data
+    # Verify that medians are calculated correctly with partial data
     assert boilr_instance.pload_median == statistics.median(powerflow_ploads)
     assert boilr_instance.ppv_median == statistics.median(powerflow_ppvs)
 
@@ -88,7 +126,7 @@ def test_update_medians_empty_lists(boilr_instance):
     boilr_instance.pload = deque(maxlen=5)
     boilr_instance.ppv = deque(maxlen=5)
 
-    # Test update_medians with no data
+    # Test update_medians without data
     result = boilr_instance.update_medians(None, None)
 
     # Should return False as there is no data for calculation

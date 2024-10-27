@@ -3,7 +3,7 @@ requires = ["setuptools>=64", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "boilr"
+name = "boilr-pv"
 dynamic = ["version"]
 description = "Water boiler automation with a Fronius pv inverter on a Raspberry Pi."
 readme = "README.md"

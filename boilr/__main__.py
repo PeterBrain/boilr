@@ -13,7 +13,7 @@ def main():
 
     logger = logging.getLogger(__name__)
 
-    if hasattr(args, 'callback'):
+    if hasattr(args, 'callback') and callable(args.callback):
         logger.debug("Executing command callback: %s", args.callback)
         args.callback(args)
     else:
