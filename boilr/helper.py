@@ -44,9 +44,9 @@ def date_check(active_date_range):
             logger.debug(msg)
             return (True, msg)
         else:
-            msg = f"Date is not in active range. Active date range is set to: \
-                {active_date_start.strftime('%d %B')} \
-                    - {active_date_end.strftime('%d %B')}"
+            msg = f"Date is not in active range. Active date range:" \
+                f" {active_date_start.strftime('%d %B')}" \
+                f" - {active_date_end.strftime('%d %B')}"
             logger.debug(msg)
             return (False, msg)
 
@@ -90,8 +90,8 @@ def time_check(active_time_range):
             logger.debug(msg)
             return (True, msg)
         else:
-            msg = f"Time is not in active range. Active time range is set to: \
-                {active_time_start.strftime('%H:%M')} \
-                    - {active_time_end.strftime('%H:%M')}"
+            msg = f"Time is not in active range. Active time range:" \
+                f" {active_time_start.strftime('%H:%M')}" \
+                f" - {active_time_end.strftime('%H:%M')}"
             logger.debug(msg)
             return (False, msg)
