@@ -251,7 +251,7 @@ def run():
             )
             return False
         else:
-            if not powerflow_site['P_Akku'] is None:
+            if powerflow_site['P_Akku'] is not None:
                 powerflow_soc = powerflow_inverters['SOC']  # state of charge
                 logger.debug("SOC: %s %%", round(powerflow_soc, 1))
             else:
