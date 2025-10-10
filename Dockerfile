@@ -8,4 +8,4 @@ RUN mkdir -p /etc/boilr
 
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-CMD [ "python3", "-m" , "boilr", "-v", "run"]
+CMD [ "python3", "-m" , "boilr", "run"]

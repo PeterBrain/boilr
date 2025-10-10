@@ -2,3 +2,4 @@ build
 pytest
 pytest-cov
 pytest-mock
+twine

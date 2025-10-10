@@ -23,12 +23,18 @@ docker-compose up -d
 docker run --privileged -v ./config.yaml:/etc/boilr/config.yaml --device /dev/gpiomem:/dev/gpiomem peterbrain/boilr:latest
 ```
 
-> [!NOTE]
+[Docker Hub Image Link][docker-image-link]
+
+> [!TIP]
 > In order to install and use Docker on a Raspberry Pi 1 Model B, I had to set `sysctl vm.overcommit_memory=1` and restart after the installation.
 
 ## PyPI - Python Package Index
 
-Boilr is not yet available on Python Package Index. Check back later
+```bash
+pip install boilr-pv
+```
+
+[PyPI Package Link][pypi-package-link]
 
 ## Manually build and install package
 
@@ -51,3 +57,5 @@ vi /etc/boilr/config.yaml
 
 
 [config-reference]: ../config.yaml
+[docker-image-link]: https://hub.docker.com/r/peterbrain/boilr
+[pypi-package-link]: https://pypi.org/project/boilr-pv/

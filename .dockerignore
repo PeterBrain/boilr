@@ -1,6 +1,6 @@
 
 .git
 .gitignore
-
+.github/
 docs/
 config.yaml
