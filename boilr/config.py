@@ -2,57 +2,56 @@
 import os
 import logging
 import yaml
+from typing import Any, Dict, Optional
 
 from boilr import __version__
 
 logger = logging.getLogger(__name__)
 
 
-class SystemConfig():
-    """System configuration class"""
-    prog_name = "boilr"  # program name
+class SystemConfig:
+    """System configuration values"""
+    prog_name: str = "boilr"  # program name
     working_directory = "/var/log/" + prog_name  # "/var/log/boilr"
     logpath = os.path.join(working_directory, prog_name + ".log")  # "/var/log/boilr/boilr.log"
     pidpath = os.path.join("/var/run", prog_name + ".pid")  # "/var/run/boilr.pid"
-    chroot_dir = None
-    logging_date_format = '%Y-%m-%dT%H:%M:%S'
-    logging_format = '[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s'
     default_config_file = os.path.join("/etc", prog_name, "config.yaml")  # "/etc/boilr/config.yaml"
     config_file = default_config_file
-
-    interval = 10  # api checking interval in seconds
-    start_timeout = 120  # minimum time between contactor state changes in seconds
-    moving_median_list_size = 5  # size of the array for past query values
-    charge_threshold = 85  # minimum state of charge of the battery in %
-    ppv_tolerance = 100  # tolerance of PV production in W
-    heater_power = 2600  # maximum power of the heating element in W
-
+    chroot_dir: Optional[str] = None
+    logging_date_format: str = "%Y-%m-%dT%H:%M:%S"
+    logging_format: str = "[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s"
+    interval: int = 10  # api checking interval in seconds
+    start_timeout: int = 120  # minimum time between contactor state changes in seconds
+    moving_median_list_size: int = 5  # size of the array for past query values
+    charge_threshold: int = 85  # minimum state of charge of the battery in %
+    ppv_tolerance: int = 100  # tolerance of PV production in W
+    heater_power: int = 2600  # maximum power of the heating element in W
     active_date_range = ["01-01", "31-12"]  # (day-month) ([start, end])
     active_time_range = ["00:00", "23:59"]  # (hour:minute) ([start, end])
 
 
-class RpiConfig():
+class RpiConfig:
     """GPIO configuration class"""
-    rpi_channel_relay_out = 17  # board number 11
-    rpi_channel_relay_in = 27  # board number 13
+    rpi_channel_relay_out: int = 17  # board number 11
+    rpi_channel_relay_in: int = 27  # board number 13
 
 
-class EndpointConfig():
+class EndpointConfig:
     """Endpoint configuration class"""
-    request_timeout = 5  # timeout for requests in seconds
-    max_retries = 3  # maximum number of retries for failed requests
-    scheme = "http://"  # request scheme for api request
-    host = "example.local"  # domain/ip-address of the inverter
-    api = "/solar_api/v1"  # api version (inverter specific)
+    request_timeout: int = 5  # timeout for requests in seconds
+    max_retries: int = 3  # maximum number of retries for failed requests
+    scheme: str = "http://"  # request scheme for api request
+    host: str = "example.local"  # domain/ip-address of the inverter
+    api: str = "/solar_api/v1"  # api version (inverter specific)
     # check with this URI: http://<ip-address>/solar_api/GetAPIVersion.cgi
-    resource = "/GetPowerFlowRealtimeData.fcgi"  # resource
+    resource: str = "/GetPowerFlowRealtimeData.fcgi"  # resource
 
 
-class MqttConfig():
+class MqttConfig:
     """MQTT broker configuration class"""
-    broker_host = "localhost"  # domain/ip-address of the mqtt broker
-    broker_port = 1883  # port of the broker
-    topic = "boilr"  # root mqtt topic
+    broker_host: str = "localhost"  # domain/ip-address of the mqtt broker
+    broker_port: int = 1883  # port of the broker
+    topic: str = "boilr"  # root mqtt topic
 
 
 def initialize(args):

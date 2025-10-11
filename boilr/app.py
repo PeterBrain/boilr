@@ -26,7 +26,8 @@ class Boilr:
     holds all status variables
     """
     def __init__(
-        self, status=None,
+        self,
+        status=None,
         status_prev=None,
         pload: List[float] = None,
         ppv: List[float] = None
@@ -184,11 +185,11 @@ def run():
         total=config.EndpointConfig.max_retries,
         backoff_factor=0.1,
         status_forcelist=[502, 503, 504],
-        allowed_methods={'GET'},
+        allowed_methods={"GET"},
     )
     adapter = HTTPAdapter(max_retries=retries)
-    session.mount('http://', adapter)
-    session.mount('https://', adapter)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
 
     try:
         response_powerflow = session.get(
@@ -217,46 +218,39 @@ def run():
             return False
 
         try:
-            powerflow_site = response_powerflow.json()['Body']['Data']['Site']
+            response_powerflow_data = response_powerflow.json()["Body"]["Data"]
+            powerflow_site = response_powerflow_data["Site"]
+            powerflow_inverters = response_powerflow_data["Inverters"]["1"]
         except Exception as e_general:
             logger.error(
-                "Error parsing JSON response (powerflow site): %s",
+                "Error parsing JSON response (powerflow): %s",
                 e_general
             )
             return False
+
+        powerflow_pgrid = powerflow_site["P_Grid"] or 0
+        # + -> from grid, - -> to grid, null -> no meter enabled
+        powerflow_pakku = powerflow_site["P_Akku"] or 0
+        # + -> discharge, - -> charge, null -> not active
+        powerflow_ppv = powerflow_site["P_PV"] or 0
+        # + -> production, null -> inverter not running
+        powerflow_pload = powerflow_site["P_Load"] or 0
+        # - -> current load
+
+        logger.debug("Powerflow grid: %s W", round(powerflow_pgrid, 2))
+        logger.debug("Powerflow battery: %s W", round(powerflow_pakku, 2))
+        logger.debug("Powerflow pv: %s W", round(powerflow_ppv, 2))
+        logger.debug("Powerflow load: %s W", round(powerflow_pload, 2))
+
+        boilr_instance.update_medians(powerflow_pload, powerflow_ppv)
+
+        # powerflow_soc = powerflow_inverters.get("SOC", 100)
+        if powerflow_site["P_Akku"] is not None:
+            powerflow_soc = powerflow_inverters["SOC"]  # state of charge
+            logger.debug("SOC: %s %%", round(powerflow_soc, 1))
         else:
-            powerflow_pgrid = powerflow_site['P_Grid'] or 0
-            # + -> from grid, - -> to grid, null -> no meter enabled
-            powerflow_pakku = powerflow_site['P_Akku'] or 0
-            # + -> discharge, - -> charge, null -> not active
-            powerflow_ppv = powerflow_site['P_PV'] or 0
-            # + -> production, null -> inverter not running
-            powerflow_pload = powerflow_site['P_Load'] or 0
-            # - -> current load
-
-            logger.debug("Powerflow grid: %s W", round(powerflow_pgrid, 2))
-            logger.debug("Powerflow battery: %s W", round(powerflow_pakku, 2))
-            logger.debug("Powerflow pv: %s W", round(powerflow_ppv, 2))
-            logger.debug("Powerflow load: %s W", round(powerflow_pload, 2))
-
-            boilr.update_medians(powerflow_pload, powerflow_ppv)
-
-        try:
-            powerflow_inverters = \
-                response_powerflow.json()['Body']['Data']['Inverters']['1']
-        except Exception as e_general:
-            logger.error(
-                "Error parsing JSON response (powerflow inverter): %s",
-                e_general
-            )
-            return False
-        else:
-            if powerflow_site['P_Akku'] is not None:
-                powerflow_soc = powerflow_inverters['SOC']  # state of charge
-                logger.debug("SOC: %s %%", round(powerflow_soc, 1))
-            else:
-                powerflow_soc = 100
-                logger.debug("SOC: Battery not active, ignoring SOC")
+            powerflow_soc = 100
+            logger.debug("SOC: Battery not active, ignoring SOC")
 
         # set gpio mode
         if not rpi_gpio.gpio_mode(
@@ -268,18 +262,20 @@ def run():
             return False
         else:
             logger.debug("Checking conditions")
-            if (powerflow_soc >= config.SystemConfig.charge_threshold and
+
+            should_switch = (
+                powerflow_soc >= config.SystemConfig.charge_threshold and
                 # soc over threshold
                 boilr.ppv_median > (
                     (config.SystemConfig.heater_power \
                         if not boilr.status_prev[0] else 0)
                     + abs(boilr.pload_median)
-                    - config.SystemConfig.ppv_tolerance)):
+                    - config.SystemConfig.ppv_tolerance
+                )
                 # median pv production is over
                 # median load + expected load with tolerance
-                boilr.update_status(True)
-            else:
-                boilr.update_status(False)
+            )
+            boilr.update_status(should_switch)
 
             # check start timeout (instant off, delayed starting)
             # previous true -> condition met (instant off)

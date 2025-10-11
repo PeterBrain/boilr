@@ -39,7 +39,7 @@ def publish_mqtt(topic, message):
             config.MqttConfig.broker_port,
             60
         )
-        client.publish(config.MqttConfig.topic + '/' + topic, message)
+        client.publish(config.MqttConfig.topic + "/" + topic, message)
         client.disconnect()
         logger.debug("Message: '%s' published to topic: '%s'", message, topic)
     except Exception as e:
@@ -54,7 +54,7 @@ def subscribe_mqtt(topic):
             config.MqttConfig.broker_port,
             60
         )
-        client.subscribe(config.MqttConfig.topic + '/' + topic)
+        client.subscribe(config.MqttConfig.topic + "/" + topic)
         client.loop_start()  # loop to process messages in the background
         logger.debug("Subscribed to topic: %s", topic)
     except Exception as e:

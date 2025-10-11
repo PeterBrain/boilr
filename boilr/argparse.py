@@ -72,4 +72,12 @@ def setup_parser():
     return custom_parser
 
 
-parser = setup_parser()
+_parser = None
+
+
+def get_parser():
+    """Get the argument parser instance"""
+    global _parser
+    if _parser is None:
+        _parser = setup_parser()
+    return _parser

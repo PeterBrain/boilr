@@ -16,7 +16,8 @@ def setup_logging(args):
     global file_handler, console_handler
 
     logger = logging.getLogger()  # root logger
-    logger.setLevel(logging.DEBUG)  # root logging level
+
+    logger.setLevel(logging.DEBUG)  # internal root level
 
     try:
         log_dir = os.path.dirname(config.SystemConfig.logpath)
@@ -27,7 +28,7 @@ def setup_logging(args):
         # Timed rotating file handler
         file_handler = logging.handlers.TimedRotatingFileHandler(
             config.SystemConfig.logpath,
-            when='W0',  # rotate weekly
+            when="W0",  # rotate weekly
             interval=1,
             backupCount=12
         )
@@ -35,7 +36,7 @@ def setup_logging(args):
         file_formatter = logging.Formatter(
             fmt=config.SystemConfig.logging_format,
             datefmt=config.SystemConfig.logging_date_format,
-            style='%'
+            style="%"
         )
         file_handler.setFormatter(file_formatter)
 
@@ -45,13 +46,21 @@ def setup_logging(args):
         console_formatter = logging.Formatter(
             fmt=config.SystemConfig.logging_format,
             datefmt=config.SystemConfig.logging_date_format,
-            style='%'
+            style="%"
         )
         console_handler.setFormatter(console_formatter)
 
         # Add handlers to the root logger
         logger.addHandler(file_handler)  # log to file
         logger.addHandler(console_handler)  # log to console
+
+        if getattr(args, "verbose", False):
+            logger.setLevel(logging.DEBUG)
+            for h in logger.handlers:
+                h.setLevel(logging.DEBUG)
+            logger.debug("Verbose mode enabled")
+
+        logger.debug("Full logging configuration applied")
 
     except PermissionError as e_permission:
         sys.stderr.write(f"PermissionError: {e_permission}\n")
@@ -60,12 +69,3 @@ def setup_logging(args):
     except Exception as e_general:
         sys.stderr.write(f"Logging setup failed: {e_general}\n")
         sys.exit(1)
-
-    else:
-        if args.verbose:
-            file_handler.setLevel(logging.DEBUG)
-            console_handler.setLevel(logging.DEBUG)
-            logger.setLevel(logging.DEBUG)
-            logger.debug("Verbose mode enabled")
-
-        logger.debug("Logging configuration successfully applied")

@@ -1,6 +1,6 @@
 """Daemon module"""
-import sys
 import os
+import sys
 import time
 import logging
 import signal
@@ -57,8 +57,8 @@ def daemon_start(args=None):
 
     if os.path.exists(config.SystemConfig.pidpath):
         msg = f"{config.SystemConfig.prog_name} is already running"
-        print(msg)
         logger.debug("%s (according to %s)", msg, config.SystemConfig.pidpath)
+        print(msg)
         sys.exit(1)
     else:
         daemon_context = init_daemon()
@@ -93,14 +93,15 @@ def daemon_stop(args=None):
         logger.info("Stopping %s...", config.SystemConfig.prog_name)
 
     if os.path.exists(config.SystemConfig.pidpath):
-        with open(config.SystemConfig.pidpath, "r", encoding="utf-8") as pid:
+        with open(config.SystemConfig.pidpath, "r", encoding="utf-8") as pid_file:
             try:
-                os.kill(int(pid.readline()), signal.SIGINT)  # kill process
+                pid = int(pid_file.readline())
+                os.kill(pid, signal.SIGINT)  # kill process
 
                 wait = "Stopping.."
                 while os.path.exists(config.SystemConfig.pidpath):
                     if core.mainctrl.verbose:
-                        print(wait, sep='', end='\r', flush=True)
+                        print(wait, sep="", end="\r", flush=True)
                         time.sleep(1)
                         wait += "."
 
@@ -131,7 +132,7 @@ def daemon_stop(args=None):
 
     else:
         logger.error(
-            "Process isn't running (according to the absence of %s).",
+            "Process is not running (no PID file found at: %s).",
             config.SystemConfig.pidpath
         )
 
@@ -227,7 +228,7 @@ def daemon_status(args):
 
 def daemon_manual(args):
     """
-    Manually setting contactor output
+    Manually override contactor
 
     - Daemon -> will be stopped and output overridden
     - Interactively -> continues and output will be overridden

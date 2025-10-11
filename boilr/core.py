@@ -66,7 +66,7 @@ def main_thread(args, mainctrl_instance):
     Exception
         General exception
     """
-    if hasattr(args, 'manual'):
+    if hasattr(args, "manual"):
         mainctrl_instance.manual = True
         app.manual_override(args.manual[0])
 
@@ -78,15 +78,12 @@ def main_thread(args, mainctrl_instance):
     thread.start()
 
     try:
-        while True:
-            if not thread.is_alive():
-                break
-
+        while thread.is_alive():
             thread.join(timeout=0.1)
 
     except KeyboardInterrupt as keyboard_interrupt:
         if mainctrl_instance.verbose:
-            logger.info("Interrupting... %s", keyboard_interrupt)
+            logger.info("Keyboard interrupt received: %s", keyboard_interrupt)
 
     except Exception as e_general:
         if mainctrl_instance.verbose:

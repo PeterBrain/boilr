@@ -7,10 +7,11 @@ import boilr.argparse as argparse
 
 def main():
     """Entry point"""
-    args = argparse.parser.parse_args()
+
+    parser = argparse.get_parser()
+    args = parser.parse_args()
 
     logg.setup_logging(args)
-
     logger = logging.getLogger(__name__)
 
     if hasattr(args, 'callback') and callable(args.callback):
@@ -18,8 +19,8 @@ def main():
         args.callback(args)
     else:
         logger.debug("No callback found, printing help")
-        argparse.parser.print_help()
+        parser.print_help()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
