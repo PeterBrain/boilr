@@ -2,103 +2,81 @@
 import logging
 import threading
 
-import boilr.config as config
 import boilr.app as app
 import boilr.rpi_gpio as rpi_gpio
 
 logger = logging.getLogger(__name__)
-thread_event = threading.Event()
 
 
 class MainCtrl:
     """Main control class for thread control"""
-    def __init__(self, thread_continue=None, verbose=None, manual=None):
-        self.thread_continue = \
-            (thread_continue if thread_continue is not None else True)
-        self.verbose = verbose if verbose is not None else False
-        self.manual = manual if manual is not None else False
+    def __init__(self, ctx=None, thread_continue=True, verbose=False, manual=False):
+        self.ctx = ctx
+        self.thread_continue = thread_continue
+        self.verbose = verbose
+        self.manual = manual
 
     def main_thread_stop(self, signum=None, frame=None):
         """Stopping main thread"""
         self.thread_continue = False
+        if self.ctx:
+            self.ctx.thread_event.set()
 
 
-mainctrl = MainCtrl()
-
-
-def app_thread(thread_stop_event, mainctrl_instance):
-    """
-    Non blocking app thread - called by main_thread
-
-    Parameters
-    ----------
-    thread_stop_event :
-        Internal flag for stop event
-    mainctrl_instance :
-        Instance of the MainCtrl class
-    """
+def app_thread(ctx):
+    """Non blocking app thread - called by main_thread"""
     logger.debug("Starting app thread")
 
-    while mainctrl_instance.thread_continue and not thread_stop_event.is_set():
-        app.run()
-        thread_stop_event.wait(config.SystemConfig.interval)
+    while ctx.main_ctrl.thread_continue and not ctx.thread_event.is_set():
+        if not app.run(ctx):
+            logger.warning("App returned False, continue with caution")
 
-        if mainctrl_instance.verbose:
+        ctx.thread_event.wait(ctx.config.system.interval)
+
+        if ctx.main_ctrl.verbose:
             logger.debug("Continuing thread...")
 
     logger.debug("Stopping app thread")
 
 
-def main_thread(args, mainctrl_instance):
-    """
-    Main thread
-
-    Parameters
-    ----------
-    args : obj
-        Command line arguments
-    mainctrl_instance :
-        Instance of MainCtrl class
-
-    Raises
-    ------
-    ToDo
-    Exception
-        General exception
-    """
-    if hasattr(args, "manual"):
-        mainctrl_instance.manual = True
-        app.manual_override(args.manual[0])
-
-    thread = threading.Thread(
-        target=app_thread,
-        args=(thread_event, mainctrl_instance,)
-    )
-    thread.daemon = True
-    thread.start()
-
-    try:
-        while thread.is_alive():
-            thread.join(timeout=0.1)
-
-    except KeyboardInterrupt as keyboard_interrupt:
-        if mainctrl_instance.verbose:
-            logger.info("Keyboard interrupt received: %s", keyboard_interrupt)
-
-    except Exception as e_general:
-        if mainctrl_instance.verbose:
-            logger.error("Exception: %s", e_general)
-
+def main_thread(ctx):
+    """Main thread"""
+    if hasattr(ctx.args, "manual"):
+        ctx.main_ctrl.manual = True
+        app.manual_override(ctx)  #.args.manual[0]
     else:
-        logger.debug("Stopping without errors")
+        thread = threading.Thread(
+            target=app_thread,
+            args=(ctx,)
+        )
+        thread.daemon = True
+        thread.start()
 
-    finally:
-        thread_event.set()
+        try:
+            while thread.is_alive():
+                thread.join(timeout=0.1)
 
-        if not mainctrl_instance.manual:
-            rpi_gpio.cleanup()
+        except KeyboardInterrupt:
+            if ctx.main_ctrl.verbose:
+                logger.info("Keyboard interrupt received")
 
-        if mainctrl_instance.verbose:
-            logger.info("Verbose mode end")
+        except RuntimeError as e_runtime:
+            logger.critical("Application logic failed. Stopping daemon. %s", e_runtime)
 
-        logger.info("Exiting...")
+        except Exception as e_general:
+            if ctx.main_ctrl.verbose:
+                logger.error("Exception: %s", e_general)
+
+        else:
+            logger.debug("Stopping without errors")
+
+        finally:
+            ctx.main_ctrl.main_thread_stop()
+
+    if not ctx.main_ctrl.manual:
+        rpi_gpio.cleanup()
+
+    if ctx.main_ctrl.verbose:
+        logger.info("Verbose mode end")
+
+    logger.info("Exiting...")

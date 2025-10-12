@@ -7,122 +7,59 @@ import signal
 import daemon
 from daemon import pidfile
 
-import boilr.logger as logg
-import boilr.config as config
 import boilr.core as core
 
 logger = logging.getLogger(__name__)
 
 
-def is_verbose(args):
-    """
-    Global verbosity store
+def daemon_start(ctx=None):
+    """Starting daemon with args - start main thread"""
+    logger.info("Starting %s service", ctx.config.system.prog_name)
+    logger.debug("Starting %s with ARGS: %s", ctx.config.system.prog_name, ctx.args)
 
-    Parameters
-    ----------
-    args : obj
-        Command line arguments
-    """
-    if hasattr(args, 'verbose') and getattr(args, 'verbose'):
-        core.mainctrl.verbose = args.verbose
-        logg.console_handler.setLevel(logging.DEBUG)
-
-
-def daemon_start(args=None):
-    """
-    Starting daemon with args - start main thread
-
-    Parameters
-    ----------
-    args : obj, optional
-        Command line arguments (default is None)
-    """
-    is_verbose(args)
-    config.initialize(args)
-
-    logger.info("Starting %s service", config.SystemConfig.prog_name)
-    logger.debug(
-        "Attempt to start daemon with pid file: %s",
-        config.SystemConfig.pidpath
-    )
-
-    if core.mainctrl.verbose:
-        logger.debug(
-            "Starting %s with ARGS: %s",
-            config.SystemConfig.prog_name,
-            args
-        )
-    else:
-        logger.info("Starting %s...", config.SystemConfig.prog_name)
-
-    if os.path.exists(config.SystemConfig.pidpath):
-        msg = f"{config.SystemConfig.prog_name} is already running"
-        logger.debug("%s (according to %s)", msg, config.SystemConfig.pidpath)
+    if os.path.exists(ctx.config.system.pidpath):
+        msg = f"{ctx.config.system.prog_name} is already running"
+        logger.debug("%s (according to %s)", msg, ctx.config.system.pidpath)
         print(msg)
         sys.exit(1)
     else:
-        daemon_context = init_daemon()
+        logger.debug("Attempt to start daemon with pid file: %s", ctx.config.system.pidpath)
+        daemon_context = init_daemon(ctx)
         with daemon_context:
-            core.main_thread(args, core.mainctrl)
+            core.main_thread(ctx)
 
 
-def daemon_stop(args=None):
-    """
-    Stopping daemon with args - stop main thread
-
-    Parameters
-    ----------
-    args : obj, optional
-        Command line arguments (default is None)
-
-    Raises
-    ------
-    ToDo
-    Exception
-        General exception
-    """
-    is_verbose(args)
-
-    if core.mainctrl.verbose:
-        logger.info(
-            "Stopping %s with ARGS: %s",
-            config.SystemConfig.prog_name,
-            args
-        )
+def daemon_stop(ctx=None):
+    """Stopping daemon with args - stop main thread"""
+    if ctx.main_ctrl.verbose:
+        logger.info("Stopping %s with ARGS: %s", ctx.config.system.prog_name, ctx.args)
     else:
-        logger.info("Stopping %s...", config.SystemConfig.prog_name)
+        logger.info("Stopping %s...", ctx.config.system.prog_name)
 
-    if os.path.exists(config.SystemConfig.pidpath):
-        with open(config.SystemConfig.pidpath, "r", encoding="utf-8") as pid_file:
+    if os.path.exists(ctx.config.system.pidpath):
+        with open(ctx.config.system.pidpath, "r", encoding="utf-8") as pid_file:
             try:
                 pid = int(pid_file.readline())
                 os.kill(pid, signal.SIGINT)  # kill process
 
                 wait = "Stopping.."
-                while os.path.exists(config.SystemConfig.pidpath):
-                    if core.mainctrl.verbose:
+                while os.path.exists(ctx.config.system.pidpath):
+                    if ctx.main_ctrl.verbose:
                         print(wait, sep="", end="\r", flush=True)
                         time.sleep(1)
                         wait += "."
 
-                if core.mainctrl.verbose:
+                if ctx.main_ctrl.verbose:
                     print(wait + " OK")
 
             except ProcessLookupError as ple:
-                os.remove(config.SystemConfig.pidpath)
+                os.remove(ctx.config.system.pidpath)
                 logger.error("ProcessLookupError: %s", ple)
                 return False
             except OSError as ose:
-                logger.error(
-                    "Process %s could not be terminated: %s",
-                    config.SystemConfig.prog_name,
-                    ose
-                )
-                logger.warning(
-                    "Attempting process %s cleanup",
-                    config.SystemConfig.prog_name
-                )
-                os.remove(config.SystemConfig.pidpath)
+                logger.error("Process could not be terminated: %s", ose)
+                logger.warning("Attempting process %s cleanup", ctx.config.system.prog_name)
+                os.remove(ctx.config.system.pidpath)
                 sys.exit(1)
             except Exception as e_general:
                 logger.error("Exception: %s", e_general)
@@ -131,147 +68,93 @@ def daemon_stop(args=None):
                 logger.info("Process is now stopped")
 
     else:
-        logger.error(
-            "Process is not running (no PID file found at: %s).",
-            config.SystemConfig.pidpath
-        )
+        logger.error("Process is not running (absent PID file at: %s).", ctx.config.system.pidpath)
 
     return True
 
 
-def daemon_restart(args):
-    """
-    Restarting daemon with args
+def daemon_restart(ctx):
+    """Restarting daemon with args"""
+    logger.info("Restarting %s...", ctx.config.system.prog_name)
+    logger.debug("Waiting for %s to stop", ctx.config.system.prog_name)
 
-    Parameters
-    ----------
-    args : obj
-        Command line arguments
-    """
-    is_verbose(args)
-
-    logger.info("Restarting %s...", config.SystemConfig.prog_name)
-    logger.debug("Waiting for %s to stop", config.SystemConfig.prog_name)
-
-    if daemon_stop():
-        logger.debug(
-            "%s stopped. Attempting to start again",
-            config.SystemConfig.prog_name
-        )
-        daemon_start(args)
+    if daemon_stop(ctx):
+        logger.debug("%s stopped. Attempting to start again", ctx.config.system.prog_name)
+        daemon_start(ctx)
 
 
-def daemon_run(args):
-    """
-    Running daemon interactively with args
-
-    Parameters
-    ----------
-    args : obj
-        Command line arguments
-    """
-    logg.console_handler.setLevel(logging.WARN)
-    is_verbose(args)
-    config.initialize(args)
-
-    logger.info(
-        "Starting %s in interactive mode",
-        config.SystemConfig.prog_name
-    )
-    core.main_thread(args, core.mainctrl)
+def daemon_run(ctx):
+    """Running daemon interactively with args"""
+    #ctx.console_handler.setLevel(logging.WARN)
+    logger.debug("%s run with ARGS: %s", ctx.config.system.prog_name, ctx.args)
+    logger.info("Starting %s in interactive mode", ctx.config.system.prog_name)
+    core.main_thread(ctx)
 
 
-def daemon_status(args):
+def daemon_status(ctx):
     """
     Printing status of daemon with args
 
     Due to memory separation in daemon,
     status variables from Boilr class are disabled.
-
-    Parameters
-    ----------
-    args : obj
-        Command line arguments
     """
-    is_verbose(args)
+    logger.debug("%s status with ARGS: %s", ctx.config.system.prog_name, ctx.args)
 
-    if core.mainctrl.verbose:
-        logger.info(
-            "%s status with ARGS: %s",
-            config.SystemConfig.prog_name,
-            args
-        )
+    if os.path.exists(ctx.config.system.pidpath):
+        msg = f"{ctx.config.system.prog_name} service is running"
+
+        if ctx.main_ctrl.verbose:
+            logger.debug(msg)
+        else:
+            with open(ctx.config.system.pidpath, "r", encoding="utf-8") as pid:
+                process_id = int(pid.readline())
+                msg += f"\nProcess id: {process_id}"
+
+            msg += f"\nPID file: {ctx.config.system.pidpath}"
+            msg += f"\nLOG file: {ctx.config.system.logpath}"
+            msg += f"\nConf file: {ctx.config.system.config_file}"
+
+            # Status variables disabled due to memory separation in daemon
+            # suggestion: multiprocessing.Manager for shared state (shared_dict)
+
+            print(msg)
     else:
-        logger.debug("%s Status: %s", config.SystemConfig.prog_name, args)
+        msg = f"{ctx.config.system.prog_name} service is not running"
 
-    if os.path.exists(config.SystemConfig.pidpath):
-        msg = f"{config.SystemConfig.prog_name} service is running"
-        logger.debug(msg)
-
-        with open(config.SystemConfig.pidpath, "r", encoding="utf-8") as pid:
-            process_id = int(pid.readline())
-            msg += f"\nProcess id: {process_id}"
-
-        msg += f"\nPID file: {config.SystemConfig.pidpath}"
-        msg += f"\nLOG file: {config.SystemConfig.logpath}"
-        msg += f"\nConf file: {config.SystemConfig.config_file}"
-
-        # Status variables disabled due to memory separation in daemon
-        # suggestion: multiprocessing.Manager for shared state (shared_dict)
-
-        print(msg)
-    else:
-        msg = f"{config.SystemConfig.prog_name} service is not running"
-        print(msg)
-        logger.debug(msg)
+        if ctx.main_ctrl.verbose:
+            logger.debug(msg)
+        else:
+            print(msg)
 
 
-def daemon_manual(args):
+def daemon_manual(ctx):
     """
     Manually override contactor
 
     - Daemon -> will be stopped and output overridden
     - Interactively -> continues and output will be overridden
-
-    Parameters
-    ----------
-    args : obj
-        Command line arguments
     """
-    is_verbose(args)
-    config.initialize(args)
-
-    logger.debug(
-        "%s Manual mode: %s",
-        config.SystemConfig.prog_name,
-        args.manual
-    )
-    core.mainctrl.thread_continue = False
-    core.main_thread(args, core.mainctrl)
+    logger.debug("%s Manual mode: %s", ctx.config.system.prog_name, ctx.args.manual)
+    ctx.main_ctrl.thread_continue = False
+    core.main_thread(ctx)
 
 
-def init_daemon():
-    """
-    Initialize daemon context
-
-    Returns
-    -------
-    DaemonContext
-    """
+def init_daemon(ctx):
+    """Initialize daemon context"""
     daemon_context = daemon.DaemonContext(
         files_preserve=[  # preserve logging handler
-            logg.file_handler.stream,
-            logg.console_handler.stream,
+            ctx.file_handler.stream,
+            ctx.console_handler.stream,
         ],
-        chroot_directory=config.SystemConfig.chroot_dir,
-        working_directory=config.SystemConfig.working_directory,
+        chroot_directory=ctx.config.system.chroot_dir,
+        working_directory=ctx.config.system.working_directory,
         umask=0o002,
-        pidfile=pidfile.PIDLockFile(config.SystemConfig.pidpath),
+        pidfile=pidfile.PIDLockFile(ctx.config.system.pidpath),
         detach_process=None,
         signal_map={
-            signal.SIGTERM: core.mainctrl.main_thread_stop,
-            signal.SIGTSTP: core.mainctrl.main_thread_stop,
-            signal.SIGINT: core.mainctrl.main_thread_stop,
+            signal.SIGTERM: ctx.main_ctrl.main_thread_stop,
+            signal.SIGTSTP: ctx.main_ctrl.main_thread_stop,
+            signal.SIGINT: ctx.main_ctrl.main_thread_stop,
             # signal.SIGKILL: daemon_stop,
             signal.SIGUSR1: daemon_status,
             signal.SIGUSR2: daemon_status,

@@ -19,7 +19,7 @@ def setup_parser():
     """Setup the argument parser with subcommands and options"""
     custom_parser = CustomArgumentParser(
         prog=config.SystemConfig.prog_name,
-        description='Water boiler automation with a Fronius pv inverter on a Raspberry Pi.',
+        description='Water boiler automation with a Fronius pv inverter.',
         epilog='Additional hardware required. Please check: https://github.com/PeterBrain/boilr',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
