@@ -7,6 +7,7 @@ import boilr.argparse as argparse
 import boilr.logger as logg
 import boilr.core as core
 import boilr.app as app
+from boilr.mqtt import MQTTHandler
 
 
 def main():
@@ -28,10 +29,10 @@ def main():
     # Instantiate main control objects
     ctx.main_ctrl = core.MainCtrl(ctx)
     ctx.boilr = app.Boilr(ctx)
+    ctx.mqtt_handler = MQTTHandler(ctx)
 
-    if hasattr(args, 'verbose') and getattr(args, 'verbose'):
+    if getattr(args, "verbose", False) or ctx.config.system.log_level.upper() == "DEBUG":
         ctx.main_ctrl.verbose = args.verbose
-        ctx.console_handler.setLevel(logging.DEBUG)
 
     # Execute the command callback if exists
     if hasattr(args, "callback") and callable(args.callback):

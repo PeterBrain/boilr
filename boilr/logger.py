@@ -55,7 +55,7 @@ def setup_logging(ctx):
 
         # Console handler
         console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setLevel(logging.WARN)
+        console_handler.setLevel(logging.WARNING)
         console_formatter = logging.Formatter(
             fmt=ctx.config.system.logging_format,
             datefmt=ctx.config.system.logging_date_format,
@@ -71,14 +71,22 @@ def setup_logging(ctx):
         ctx.file_handler = file_handler
         ctx.console_handler = console_handler
 
-        if getattr(ctx.args, "verbose", False):
+        if getattr(ctx.args, "verbose", False) or ctx.config.system.log_level.upper() == "DEBUG":
             for h in logger.handlers:
                 h.setLevel(logging.DEBUG)
 
             logger.setLevel(logging.DEBUG)
             logger.debug("Verbose mode enabled")
 
-        logger.debug("Full logging configuration applied")
+        else:
+            log_level = ctx.config.system.log_level.upper()
+            numeric_level = getattr(logging, log_level, logging.WARNING)
+            logger.setLevel(numeric_level)
+
+            for h in logger.handlers:
+                h.setLevel(numeric_level)
+
+        logger.debug("Logging configuration applied")
 
     except PermissionError as e_permission:
         sys.stderr.write(f"PermissionError: {e_permission}\n")

@@ -17,7 +17,6 @@ from requests.exceptions import (
 import boilr.daemon as daemon
 import boilr.helper as helper
 import boilr.rpi_gpio as rpi_gpio
-from boilr.mqtt import publish_mqtt
 
 logger = logging.getLogger(__name__)
 
@@ -51,13 +50,14 @@ class Boilr:
         self.ppv = deque(maxlen=self.config.system.moving_median_list_size)
         self.pload_median = 0
         self.ppv_median = 0
+        logger.debug("Initializing boilr")
 
 
     def update_status(self, state: bool):
         """Update contactor status"""
         self.status = (state, datetime.now())
         self.logger.debug("Status updated: %s", state)
-        publish_mqtt("contactor/state", state)
+        self.ctx.mqtt_handler.publish("contactor/state", state)
         return True
 
 
@@ -87,8 +87,8 @@ class Boilr:
             #logger.debug("Power pv deque: %s", list(self.ppv))
 
             #if self.date_check and self.time_check:  # DEV
-            #    publish_mqtt("statistics/median/load", self.pload_median)
-            #    publish_mqtt("statistics/median/pv", self.ppv_median)
+            #    self.ctx.mqtt_handler.publish("statistics/median/load", self.pload_median)
+            #    self.ctx.mqtt_handler.publish("statistics/median/pv", self.ppv_median)
 
             return True
 
@@ -131,8 +131,8 @@ def run(ctx):
             pass
 
     # Check date/time ranges
-    # boilr_instance.date_check, _ = helper.date_check(config.SystemConfig.active_date_range)
-    # boilr_instance.time_check, _ = helper.time_check(config.SystemConfig.active_time_range)
+    # boilr_instance.date_check, _ = helper.date_check(config.system.active_date_range)
+    # boilr_instance.time_check, _ = helper.time_check(config.system.active_time_range)
 
     # If outside allowed ranges, clean up GPIO
     #if not (boilr_instance.date_check and boilr_instance.time_check):
@@ -169,6 +169,8 @@ def run(ctx):
         logger.error("Unrecoverable error in request: %s", e_general)
         daemon.daemon_stop(ctx)
         boilr_instance.update_medians(0, 0)
+        # Signal unrecoverable error to the caller (core.py)
+        #raise RuntimeError("Unrecoverable error during API request.") from e_general
         return False
     else:
         if response_powerflow.status_code != 200:
@@ -242,11 +244,11 @@ def run(ctx):
             # start timeout checks combined
             # if (boilr_instance.status_prev[0] != boilr_instance.status[0] and
             #    (boilr_instance.status_prev[0] or
-            #        (datetime.now() - boilr_instance.status_prev[1]).total_seconds() > config.SystemConfig.start_timeout)):
+            #        (datetime.now() - boilr_instance.status_prev[1]).total_seconds() > config.system.start_timeout)):
             if boilr_instance.status_prev[0] or \
                 (not boilr_instance.status_prev[0] and
                     (boilr_instance.status_prev[1] < datetime.now()
-                        - timedelta(seconds=config.SystemConfig.start_timeout))):
+                        - timedelta(seconds=config.system.start_timeout))):
                 # check if status unchanged
                 if boilr_instance.status_prev[0] != boilr_instance.status[0]:
                     logger.debug(
@@ -261,7 +263,7 @@ def run(ctx):
                     boilr_instance.status_prev = boilr_instance.status
 
                     if not rpi_gpio.output_relay(
-                        config.RpiConfig.rpi_channel_relay_out,
+                        config.rpi.rpi_channel_relay_out,
                         boilr_instance.status[0]
                     ):
                         logger.warning("Error while setting gpio channel")
@@ -273,10 +275,10 @@ def run(ctx):
                     )
 
         # read relay channel
-        if not rpi_gpio.gpio_mode(config.RpiConfig.rpi_channel_relay_in, "in"):
+        if not rpi_gpio.gpio_mode(config.rpi.rpi_channel_relay_in, "in"):
             logger.warning("Error while setting gpio mode for: input")
             return False
-        elif not rpi_gpio.input_relay(config.RpiConfig.rpi_channel_relay_in):
+        elif not rpi_gpio.input_relay(config.rpi.rpi_channel_relay_in):
             logger.warning("Error while reading gpio channel")
             return False
         else:

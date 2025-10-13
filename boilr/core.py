@@ -10,11 +10,19 @@ logger = logging.getLogger(__name__)
 
 class MainCtrl:
     """Main control class for thread control"""
-    def __init__(self, ctx=None, thread_continue=True, verbose=False, manual=False):
+    def __init__(
+        self,
+        ctx=None,
+        thread_continue=True,
+        verbose=False,
+        manual=False
+    ):
         self.ctx = ctx
         self.thread_continue = thread_continue
         self.verbose = verbose
         self.manual = manual
+        logger.debug("Initializing thread control")
+
 
     def main_thread_stop(self, signum=None, frame=None):
         """Stopping main thread"""
@@ -75,6 +83,8 @@ def main_thread(ctx):
 
     if not ctx.main_ctrl.manual:
         rpi_gpio.cleanup()
+
+    ctx.mqtt_handler.disconnect()
 
     if ctx.main_ctrl.verbose:
         logger.info("Verbose mode end")

@@ -6,6 +6,7 @@ import threading
 from boilr.config import Config
 from boilr.core import MainCtrl
 from boilr.app import Boilr
+from boilr.mqtt import MQTTHandler
 
 
 @dataclass
@@ -18,4 +19,5 @@ class Context:
     file_handler: logging.Handler = None
     main_ctrl: MainCtrl = None
     boilr: Boilr = None
+    mqtt_handler: MQTTHandler = None
     thread_event: threading.Event = field(default_factory=threading.Event)

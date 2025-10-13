@@ -25,6 +25,13 @@ def daemon_start(ctx=None):
     else:
         logger.debug("Attempt to start daemon with pid file: %s", ctx.config.system.pidpath)
         daemon_context = init_daemon(ctx)
+        #daemon_context.signal_map = {
+        #    signal.SIGTERM: mainctrl_instance.stop,
+        #    signal.SIGTSTP: mainctrl_instance.stop,
+        #    signal.SIGINT: mainctrl_instance.stop,
+        #    signal.SIGUSR1: lambda s, f: daemon_status(),
+        #    signal.SIGUSR2: lambda s, f: daemon_status(),
+        #}
         with daemon_context:
             core.main_thread(ctx)
 
@@ -143,14 +150,14 @@ def init_daemon(ctx):
     """Initialize daemon context"""
     daemon_context = daemon.DaemonContext(
         files_preserve=[  # preserve logging handler
-            ctx.file_handler.stream,
-            ctx.console_handler.stream,
+            ctx.file_handler.stream,  #getattr(ctx.file_handler, "stream", None),
+            ctx.console_handler.stream,  #getattr(ctx.console_handler, "stream", None),
         ],
         chroot_directory=ctx.config.system.chroot_dir,
         working_directory=ctx.config.system.working_directory,
         umask=0o002,
         pidfile=pidfile.PIDLockFile(ctx.config.system.pidpath),
-        detach_process=None,
+        detach_process=True,
         signal_map={
             signal.SIGTERM: ctx.main_ctrl.main_thread_stop,
             signal.SIGTSTP: ctx.main_ctrl.main_thread_stop,

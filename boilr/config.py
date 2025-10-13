@@ -22,6 +22,7 @@ class SystemConfig:
     logging_format: str = "[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s"
     default_config_file: str = field(init=False)
     config_file: str = field(init=False)
+    log_level: str = "WARNING"  # default log level - DEBUG, INFO, WARNING, ERROR, CRITICAL
     interval: int = 10  # api checking interval in seconds
     start_timeout: int = 120  # minimum time between contactor state changes in seconds
     moving_median_list_size: int = 5  # size of the array for past query values
@@ -63,7 +64,7 @@ class MqttConfig:
     """MQTT broker configuration class"""
     broker_host: str = "localhost"  # domain/ip-address of the mqtt broker
     broker_port: int = 1883  # port of the broker
-    topic: str = "boilr"  # root mqtt topic
+    base_topic: str = "boilr"  # mqtt base topic
 
 
 # Config Object Factory

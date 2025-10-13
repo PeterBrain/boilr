@@ -1,5 +1,7 @@
 ---
 boilr:
+  log_level: "INFO"
+    # DEBUG, INFO, WARNING, ERROR, CRITICAL
   interval: 10
     # api checking interval in seconds
   start_timeout: 120
@@ -59,6 +61,7 @@ mqtt:
     # domain/ip-address of the mqtt broker
   broker_port: 1883
     # port of the broker
-  topic: "boilr"
-    # root mqtt topic
-    # contactor state is published with <topic>/contactor/state
+  base_topic: "boilr"
+    # mqtt base topic
+    # boilr status is published with <base_topic>/status/online
+    # contactor state is published with <base_topic>/contactor/state
