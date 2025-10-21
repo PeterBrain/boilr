@@ -23,9 +23,7 @@ logger = logging.getLogger(__name__)
 
 class Boilr:
     """
-    Boilr class
-
-    Holds all status variables and handles state logic
+    Boilr class - application state and logic
     """
     def __init__(
         self,
@@ -91,6 +89,37 @@ class Boilr:
             #    self.ctx.mqtt_handler.publish("statistics/median/pv", self.ppv_median)
 
             return True
+
+
+    def handle_command(self, command: str, payload: str):
+        """Handle incoming MQTT commands"""
+        try:
+            if command == "manual_override":
+                value = int(payload)
+                if value not in {0, 1}:
+                    raise ValueError("manual_override requires 0 or 1")
+
+                self.logger.info("Received manual override command: %s", value)
+                self.manual_override(value)
+
+            else:
+                self.logger.warning("Unknown MQTT command: %s", command)
+
+        except ValueError as ve:
+            self.logger.error("Invalid command payload for %s: %s", command, ve)
+        except Exception as e:
+            self.logger.error("Error while handling MQTT command '%s': %s", command, e)
+
+
+    def manual_override(self, value: int):
+        """Manually override the contactor via command."""
+        try:
+            rpi_gpio.gpio_mode(self.config.rpi.rpi_channel_relay_out, "out")
+            rpi_gpio.output_relay(self.config.rpi.rpi_channel_relay_out, bool(value))
+            self.update_status(bool(value))
+            self.logger.info("Manual override applied: %s", bool(value))
+        except Exception as e:
+            self.logger.error("Failed manual override: %s", e)
 
 
 def run(ctx):
@@ -169,8 +198,6 @@ def run(ctx):
         logger.error("Unrecoverable error in request: %s", e_general)
         daemon.daemon_stop(ctx)
         boilr_instance.update_medians(0, 0)
-        # Signal unrecoverable error to the caller (core.py)
-        #raise RuntimeError("Unrecoverable error during API request.") from e_general
         return False
     else:
         if response_powerflow.status_code != 200:
@@ -204,7 +231,6 @@ def run(ctx):
         logger.debug("Powerflow load: %s W", round(powerflow_pload, 2))
 
         boilr_instance.update_medians(powerflow_pload, powerflow_ppv)
-        #boilr_instance.update_medians(powerflow_site.get("P_Load", 0), powerflow_site.get("P_PV", 0))
 
         #powerflow_soc = powerflow_inverters.get("SOC", 100)
         if powerflow_site["P_Akku"] is not None:
@@ -240,11 +266,6 @@ def run(ctx):
             # previous true -> condition met (instant off)
             # previous false & timedelta between toggle
             #   -> condition met (delayed starting)
-
-            # start timeout checks combined
-            # if (boilr_instance.status_prev[0] != boilr_instance.status[0] and
-            #    (boilr_instance.status_prev[0] or
-            #        (datetime.now() - boilr_instance.status_prev[1]).total_seconds() > config.system.start_timeout)):
             if boilr_instance.status_prev[0] or \
                 (not boilr_instance.status_prev[0] and
                     (boilr_instance.status_prev[1] < datetime.now()

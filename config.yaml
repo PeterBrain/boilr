@@ -61,6 +61,10 @@ mqtt:
     # domain/ip-address of the mqtt broker
   broker_port: 1883
     # port of the broker
+  user: demo
+    # client username
+  password: demo
+    # client password
   base_topic: "boilr"
     # mqtt base topic
     # boilr status is published with <base_topic>/status/online

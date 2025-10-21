@@ -64,6 +64,8 @@ class MqttConfig:
     """MQTT broker configuration class"""
     broker_host: str = "localhost"  # domain/ip-address of the mqtt broker
     broker_port: int = 1883  # port of the broker
+    user: str = ""  # client username
+    password: str = ""  # client password
     base_topic: str = "boilr"  # mqtt base topic
 
 
