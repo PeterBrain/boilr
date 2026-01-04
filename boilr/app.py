@@ -27,7 +27,7 @@ class Boilr:
     """
     def __init__(
         self,
-        ctx,
+        ctx=None,
         status=None,
         status_prev=None,
         pload: List[float] = None,
@@ -158,15 +158,6 @@ def run(ctx):
             return False
         else:
             pass
-
-    # Check date/time ranges
-    # boilr_instance.date_check, _ = helper.date_check(config.system.active_date_range)
-    # boilr_instance.time_check, _ = helper.time_check(config.system.active_time_range)
-
-    # If outside allowed ranges, clean up GPIO
-    #if not (boilr_instance.date_check and boilr_instance.time_check):
-    #    rpi_gpio.cleanup()
-    #    return False
 
     inverter_url = f"{config.endpoint.scheme}{config.endpoint.host}"
     logger.debug("Gathering information from endpoint at: %s", inverter_url)
@@ -308,29 +299,25 @@ def run(ctx):
     return True
 
 
-def manual_override(ctx):
+def manual_override(ctx) -> bool:
     """Manually override contactor status"""
     try:
         if (not rpi_gpio.gpio_mode(ctx.config.rpi.rpi_channel_relay_out, "out") or \
             not rpi_gpio.gpio_mode(ctx.config.rpi.rpi_channel_relay_in, "in")):
             raise SystemError("GPIO mode failed")
 
-        if ctx.args in {0, 1}:
-            logger.debug(
-                "Manual override: contactor %s",
-                "closed" if ctx.args == 1 else "open"
-            )
+        if ctx.args.manual[0] in {0, 1}:
             logger.info(
                 "Status: %s (manual)",
-                "active" if ctx.args == 1 else "inactive"
+                "active" if ctx.args.manual[0] == 1 else "inactive"
             )
             if not rpi_gpio.output_relay(
                 ctx.config.rpi.rpi_channel_relay_out,
-                True if ctx.args == 1 else False
+                True if ctx.args.manual[0] == 1 else False
             ):
                 raise SystemError("GPIO channel failed")
         else:
-            raise ValueError(f"Argument not in allowed set: {ctx.args}")
+            raise ValueError(f"Argument not in allowed set: {ctx.args.manual[0]}")
 
     except SystemError as system_exception:
         logger.error("Error while setting gpio: %s", system_exception)

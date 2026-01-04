@@ -31,9 +31,6 @@ def main():
     ctx.boilr = app.Boilr(ctx)
     ctx.mqtt_handler = MQTTHandler(ctx)
 
-    if getattr(args, "verbose", False) or ctx.config.system.log_level.upper() == "DEBUG":
-        ctx.main_ctrl.verbose = args.verbose
-
     # Execute the command callback if exists
     if hasattr(args, "callback") and callable(args.callback):
         logger.debug("Executing command callback: %s", args.callback)

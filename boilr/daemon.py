@@ -25,23 +25,13 @@ def daemon_start(ctx=None):
     else:
         logger.debug("Attempt to start daemon with pid file: %s", ctx.config.system.pidpath)
         daemon_context = init_daemon(ctx)
-        #daemon_context.signal_map = {
-        #    signal.SIGTERM: mainctrl_instance.stop,
-        #    signal.SIGTSTP: mainctrl_instance.stop,
-        #    signal.SIGINT: mainctrl_instance.stop,
-        #    signal.SIGUSR1: lambda s, f: daemon_status(),
-        #    signal.SIGUSR2: lambda s, f: daemon_status(),
-        #}
         with daemon_context:
             core.main_thread(ctx)
 
 
 def daemon_stop(ctx=None):
     """Stopping daemon with args - stop main thread"""
-    if ctx.main_ctrl.verbose:
-        logger.info("Stopping %s with ARGS: %s", ctx.config.system.prog_name, ctx.args)
-    else:
-        logger.info("Stopping %s...", ctx.config.system.prog_name)
+    logger.info("Stopping %s with ARGS: %s", ctx.config.system.prog_name, ctx.args)
 
     if os.path.exists(ctx.config.system.pidpath):
         with open(ctx.config.system.pidpath, "r", encoding="utf-8") as pid_file:
@@ -67,17 +57,17 @@ def daemon_stop(ctx=None):
                 logger.error("Process could not be terminated: %s", ose)
                 logger.warning("Attempting process %s cleanup", ctx.config.system.prog_name)
                 os.remove(ctx.config.system.pidpath)
-                sys.exit(1)
+                sys.exit(1)  # exit with error (return False unreachable)
             except Exception as e_general:
                 logger.error("Exception: %s", e_general)
                 return False
             else:
                 logger.info("Process is now stopped")
+                return True
 
     else:
         logger.error("Process is not running (absent PID file at: %s).", ctx.config.system.pidpath)
-
-    return True
+        return False
 
 
 def daemon_restart(ctx):
@@ -92,7 +82,6 @@ def daemon_restart(ctx):
 
 def daemon_run(ctx):
     """Running daemon interactively with args"""
-    #ctx.console_handler.setLevel(logging.WARN)
     logger.debug("%s run with ARGS: %s", ctx.config.system.prog_name, ctx.args)
     logger.info("Starting %s in interactive mode", ctx.config.system.prog_name)
     core.main_thread(ctx)
@@ -142,7 +131,6 @@ def daemon_manual(ctx):
     - Interactively -> continues and output will be overridden
     """
     logger.debug("%s Manual mode: %s", ctx.config.system.prog_name, ctx.args.manual)
-    ctx.main_ctrl.thread_continue = False
     core.main_thread(ctx)
 
 

@@ -57,5 +57,10 @@ local_scheme = "node-and-timestamp"
 write_to = "boilr/_version.py"
 fallback_version = "0.0.1"
 
-[tool.pytest]
-addopts = "-v"
+[tool.pytest.ini_options]
+minversion = "6.0"
+pythonpath = ["."]
+addopts = "-v --cov=boilr" # --tb=short -ra -q
+testpaths = [
+    "tests",
+]

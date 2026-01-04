@@ -31,6 +31,8 @@ Check out this [Sample configuration][config-reference] for reference.
 
 ## Usage
 
+### CLI
+
 Starting service:
 
 ```bash
@@ -79,6 +81,21 @@ https://github.com/PeterBrain/boilr
 
 > [!IMPORTANT]
 > In all operating modes Boilr needs permission to create a file in /var/log. If you run boilr as a daemon it needs permission to create a file in /var/run. Pytest needs write permission to /var/log too.
+
+### MQTT
+
+Boilr publishes via the following topics:
+<base_topic>/status/online - boilr online/offline
+<base_topic>/contactor/state - contactor open or closed
+<base_topic>/ack/<command> - acknowledge received command
+
+and listens to:
+<base_topic>/cmd/<command>
+
+where command is one of the following:
+- manual_override
+
+e.g. topic: boilr/cmd/manual_override, with payload: 0 or 1
 
 ## Requirements
 

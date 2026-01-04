@@ -104,10 +104,13 @@ class MQTTHandler:
             result = self.client.publish(full_topic, message, qos=qos, retain=retain)
             if result.rc == mqtt.MQTT_ERR_SUCCESS:
                 self.logger.debug("Published '%s' to '%s'", message, full_topic)
+                return True
             else:
                 self.logger.warning("Failed to publish to '%s': %s", full_topic, result.rc)
+                return False
         except Exception as e:
             self.logger.error("MQTT publish error: %s", e)
+            return False
 
 
     def subscribe(self, topic, qos=0):

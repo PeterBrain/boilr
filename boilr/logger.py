@@ -14,7 +14,7 @@ def setup_bootstrap_logging():
     handler = logging.StreamHandler(sys.stderr)
     handler.setFormatter(logging.Formatter("[%(levelname)s] %(name)s: %(message)s"))
     root.addHandler(handler)
-    root.setLevel(logging.WARN)
+    root.setLevel(logging.INFO)
 
     root.debug("Bootstrap logging initialized")
 
@@ -24,12 +24,9 @@ def setup_logging(ctx):
     logger = logging.getLogger()  # root logger
     logger.setLevel(logging.DEBUG)  # root log level
 
-    # Remove or migrate any existing handlers
+    # Remove any existing handlers
     for h in logger.handlers[:]:
         logger.removeHandler(h)
-        #if isinstance(h, logging.StreamHandler) and h.stream == sys.stderr:
-        #    h.setLevel(logging.INFO)
-        #    logger.debug("Migrating bootstrap logs to full logger")
 
     try:
         log_dir = os.path.dirname(ctx.config.system.logpath)
